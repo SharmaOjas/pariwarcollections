@@ -1,0 +1,26 @@
+Add a "Adjustable" size option In Admin panel as some of the products are adjustable
+
+
+Add another option as Customise box in which user will put theri own size and we will recive it in admin panel and we can get a customize size
+
+
+Add a "Coupon" box also in the payment screen
+
+
+Add a "In stock/Out of Stock/ and coming soon" 
+
+
+Reduce the Categories Section its getting too long
+
+
+Add "added to cart" alert
+
+
+add funcationality of emails
+Whatsaap message etc
+Notify them for if their product is outof stock and it has come in stock then it will notify them
+We should do that all the notifications on the email it self auto generated emails U can also add Whatsaap 
+Coming soon is for prebooking
+
+
+lateron Chatbot
