@@ -21,11 +21,11 @@ const connectDB = async () => {
       console.log("MongoDB disconnected.");
     });
 
-    // Connect to the database
-    await mongoose.connect(`${process.env.MONGODB_URI}/e-commerce`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // Build connection string: prefer SRV and avoid deprecated options
+    const baseUri = process.env.MONGODB_URI || ''
+    const hasDbInUri = /mongodb(\+srv)?:\/\/[^/]+\/[^?]+/.test(baseUri)
+    const connUri = hasDbInUri ? baseUri : `${baseUri}/e-commerce`
+    await mongoose.connect(connUri)
 
   } catch (error) {
     console.error("Error connecting to the database:", error);

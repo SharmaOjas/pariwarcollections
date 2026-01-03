@@ -29,8 +29,23 @@ app.use(cors({
         return callback(new Error('Not allowed by CORS'))
     },
     credentials: true,
-    methods: ['GET','POST'],
-    allowedHeaders: ['Content-Type','token']
+    methods: ['GET','POST','OPTIONS'],
+    allowedHeaders: ['Content-Type','token','Authorization'],
+    optionsSuccessStatus: 200
+}))
+
+// explicit preflight handling for serverless environments
+app.options('*', cors({
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true)
+        const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin)
+        if (isLocalhost || allowedOrigins.includes(origin)) {
+            return callback(null, true)
+        }
+        return callback(new Error('Not allowed by CORS'))
+    },
+    credentials: true,
+    allowedHeaders: ['Content-Type','token','Authorization']
 }))
 
 app.use((req,res,next)=>{
