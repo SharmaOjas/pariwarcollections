@@ -1,36 +1,30 @@
 import mongoose from "mongoose";
 
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define MONGODB_URI in environment variables");
+}
+
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
-  try {
-    // Check if already connected to avoid redundant connections in serverless environments
-    if (mongoose.connection.readyState === 1) {
-      console.log("Already connected to the database.");
-      return;
-    }
-
-    // Event listeners for connection status
-    mongoose.connection.on("connected", () => {
-      console.log("MongoDB connected successfully.");
-    });
-
-    mongoose.connection.on("error", (err) => {
-      console.error("MongoDB connection error:", err);
-    });
-
-    mongoose.connection.on("disconnected", () => {
-      console.log("MongoDB disconnected.");
-    });
-
-    // Build connection string: prefer SRV and avoid deprecated options
-    const baseUri = process.env.MONGODB_URI || ''
-    const hasDbInUri = /mongodb(\+srv)?:\/\/[^/]+\/[^?]+/.test(baseUri)
-    const connUri = hasDbInUri ? baseUri : `${baseUri}/e-commerce`
-    await mongoose.connect(connUri)
-
-  } catch (error) {
-    console.error("Error connecting to the database:", error);
-    throw error; // Rethrow the error for further handling if needed
+  if (cached.conn) {
+    return cached.conn;
   }
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      bufferCommands: false,
+    });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
 };
 
 export default connectDB;
