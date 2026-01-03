@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useState, useEffect } from 'react'
 import Title from '../components/Title'
 import CartTotal from '../components/CartTotal'
 import { assets } from '../assets/assets'
@@ -9,7 +9,22 @@ import { toast } from 'react-toastify'
 const PlaceOrder = () => {
 
     const [method, setMethod] = useState('cod');
-    const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products } = useContext(ShopContext);
+    const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products, getCartCount } = useContext(ShopContext);
+    
+    // Check authentication and cart
+    useEffect(() => {
+        if (!token) {
+            toast.error('Please login to place an order')
+            navigate('/login', { replace: true })
+            return
+        }
+        
+        if (getCartCount() === 0) {
+            toast.error('Your cart is empty')
+            navigate('/cart', { replace: true })
+            return
+        }
+    }, [token, navigate, getCartCount])
     const [couponCode, setCouponCode] = useState('');
     const [couponApplied, setCouponApplied] = useState(false);
     const [formData, setFormData] = useState({
@@ -49,17 +64,18 @@ const PlaceOrder = () => {
             order_id: order.id,
             receipt: order.receipt,
             handler: async (response) => {
-                console.log(response)
                 try {
                     
                     const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay',response,{headers:{token}})
                     if (data.success) {
-                        navigate('/order-placed')
+                        sessionStorage.setItem('orderPlaced', 'true')
+                        navigate('/order-placed', { state: { orderPlaced: true } })
                         setCartItems({})
+                    } else {
+                        toast.error(data.message || 'Payment verification failed')
                     }
                 } catch (error) {
-                    console.log(error)
-                    toast.error(error)
+                    toast.error(error.response?.data?.message || 'Payment verification failed. Please contact support.')
                 }
             }
         }
@@ -69,6 +85,37 @@ const PlaceOrder = () => {
 
     const onSubmitHandler = async (event) => {
         event.preventDefault()
+        
+        // Check authentication
+        if (!token) {
+            toast.error('Please login to place an order')
+            navigate('/login')
+            return
+        }
+        
+        // Check if cart is empty
+        if (getCartCount() === 0) {
+            toast.error('Your cart is empty')
+            navigate('/cart')
+            return
+        }
+        
+        // Validate form data
+        const requiredFields = ['firstName', 'lastName', 'email', 'street', 'city', 'state', 'zipcode', 'country', 'phone']
+        const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '')
+        
+        if (missingFields.length > 0) {
+            toast.error('Please fill in all required fields')
+            return
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(formData.email)) {
+            toast.error('Please enter a valid email address')
+            return
+        }
+        
         try {
 
             let orderItems = []
@@ -84,6 +131,13 @@ const PlaceOrder = () => {
                         }
                     }
                 }
+            }
+            
+            // Double check orderItems is not empty
+            if (orderItems.length === 0) {
+                toast.error('Your cart is empty')
+                navigate('/cart')
+                return
             }
 
             let orderData = {
@@ -101,7 +155,8 @@ const PlaceOrder = () => {
                         const response = await axios.post(backendUrl + '/api/order/place',orderData,{headers:{token}})
                         if (response.data.success) {
                             setCartItems({})
-                            navigate('/order-placed')
+                            sessionStorage.setItem('orderPlaced', 'true')
+                            navigate('/order-placed', { state: { orderPlaced: true } })
                         } else {
                             toast.error(response.data.message)
                         }
@@ -137,8 +192,7 @@ const PlaceOrder = () => {
 
 
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            toast.error(error.response?.data?.message || 'Failed to place order. Please try again.')
         }
     }
 

@@ -2,15 +2,25 @@ import { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import Title from '../components/Title';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Orders = () => {
 
-  const { backendUrl, token , currency} = useContext(ShopContext);
+  const { backendUrl, token , currency, navigate} = useContext(ShopContext);
 
   const [orderData,setorderData] = useState([])
   const [orders, setOrders] = useState([])
   const [showReceipt, setShowReceipt] = useState(false)
   const [receiptOrder, setReceiptOrder] = useState(null)
+
+  // Check authentication on mount
+  useEffect(() => {
+    if (!token) {
+      toast.error('Please login to view your orders')
+      navigate('/login', { replace: true })
+      return
+    }
+  }, [token, navigate])
 
   const loadOrderData = async () => {
     try {
@@ -41,7 +51,9 @@ const Orders = () => {
       }
       
     } catch (error) {
-      console.log(error)
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      }
     }
   }
 

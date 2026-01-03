@@ -18,21 +18,23 @@ const Verify = () => {
         try {
 
             if (!token) {
-                return null
+                toast.error('Please login to verify payment')
+                navigate('/login', { replace: true })
+                return
             }
 
             const response = await axios.post(backendUrl + '/api/order/verifyStripe', { success, orderId }, { headers: { token } })
 
             if (response.data.success) {
                 setCartItems({})
-                navigate('/order-placed')
+                sessionStorage.setItem('orderPlaced', 'true')
+                navigate('/order-placed', { state: { orderPlaced: true } })
             } else {
                 navigate('/payment-failed')
             }
 
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            toast.error(error.response?.data?.message || 'Payment verification failed. Please contact support.')
         }
     }
 

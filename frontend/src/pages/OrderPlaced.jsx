@@ -1,7 +1,25 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 const OrderPlaced = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    // Check if user came from a valid order placement
+    // Either from location state or sessionStorage flag
+    const isValidAccess = location.state?.orderPlaced || sessionStorage.getItem('orderPlaced') === 'true'
+    
+    if (!isValidAccess) {
+      // Redirect to home if accessed directly
+      navigate('/', { replace: true })
+      return
+    }
+    
+    // Clear the sessionStorage flag after showing the page
+    sessionStorage.removeItem('orderPlaced')
+  }, [navigate, location])
+
   return (
     <div className='flex flex-col items-center justify-center min-h-[60vh] text-center px-4'>
       <div className='bg-green-100 p-6 rounded-full mb-6'>
