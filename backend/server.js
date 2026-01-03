@@ -19,34 +19,25 @@ connectCloudinary()
 app.use(express.json())
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean)
-app.use(cors({
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true
+    if (origin === 'null' && process.env.NODE_ENV !== 'production') return true
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true
+    if (allowedOrigins.includes(origin)) return true
+    return false
+}
+const corsOptions = {
     origin: (origin, callback) => {
-        if (!origin) return callback(null, true)
-        const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin)
-        if (isLocalhost || allowedOrigins.includes(origin)) {
-            return callback(null, true)
-        }
-        return callback(new Error('Not allowed by CORS'))
+        if (isAllowedOrigin(origin)) return callback(null, true)
+        return callback(null, false)
     },
     credentials: true,
     methods: ['GET','POST','OPTIONS'],
-    allowedHeaders: ['Content-Type','token','Authorization'],
-    optionsSuccessStatus: 200
-}))
-
-// explicit preflight handling for serverless environments
-app.options('*', cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true)
-        const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin)
-        if (isLocalhost || allowedOrigins.includes(origin)) {
-            return callback(null, true)
-        }
-        return callback(new Error('Not allowed by CORS'))
-    },
-    credentials: true,
-    allowedHeaders: ['Content-Type','token','Authorization']
-}))
+    allowedHeaders: ['Content-Type','Authorization','token'],
+    optionsSuccessStatus: 204
+}
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 app.use((req,res,next)=>{
     res.set({
