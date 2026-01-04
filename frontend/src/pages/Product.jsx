@@ -22,6 +22,90 @@ const Product = () => {
   const [submitting, setSubmitting] = useState(false)
   const computedStatus = productData ? (productData.inventoryStatus === 'Coming Soon' ? 'Coming Soon' : ((productData.inventoryQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock')) : 'Coming Soon';
 
+  const [zoomEnabled, setZoomEnabled] = useState(false)
+  const [zoomScale, setZoomScale] = useState(1.3)
+  const [lensVisible, setLensVisible] = useState(false)
+  const [lensPos, setLensPos] = useState({ x: 0, y: 0 })
+  const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 })
+  const [imgLoaded, setImgLoaded] = useState(false)
+  const [pinchStart, setPinchStart] = useState(0)
+  const [activePointers, setActivePointers] = useState({})
+
+  const onImageLoad = (e) => {
+    setImgNatural({ w: e.target.naturalWidth, h: e.target.naturalHeight })
+    setImgLoaded(true)
+  }
+  const clamp = (val, min, max) => Math.min(Math.max(val, min), max)
+  const onEnter = () => { if (zoomEnabled && imgLoaded) setLensVisible(true) }
+  const onLeave = () => setLensVisible(false)
+  const onMove = (e) => {
+    if (!lensVisible || !imgLoaded) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = clamp(e.clientX - rect.left, 0, rect.width)
+    const y = clamp(e.clientY - rect.top, 0, rect.height)
+    setLensPos({ x, y })
+  }
+  const toggleZoom = () => setZoomEnabled((z) => !z)
+  const onWheel = (e) => {
+    if (!zoomEnabled) return
+    const delta = e.deltaY < 0 ? 0.1 : -0.1
+    setZoomScale((s) => clamp(Number((s + delta).toFixed(2)), 1.0, 2.5))
+  }
+  const getDistance = (p1, p2) => Math.hypot(p2.x - p1.x, p2.y - p1.y)
+  const onPointerDown = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const id = e.pointerId
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    setActivePointers((prev) => ({ ...prev, [id]: pos }))
+    if (Object.keys(activePointers).length + 1 >= 2) {
+      const ids = Object.keys({ ...activePointers, [id]: pos })
+      const p1 = activePointers[ids[0]] || pos
+      const p2 = activePointers[ids[1]] || pos
+      setPinchStart(getDistance(p1, p2))
+      if (!zoomEnabled && imgLoaded) {
+        setZoomEnabled(true)
+        setLensVisible(true)
+      }
+    } else {
+      if (zoomEnabled && imgLoaded) setLensVisible(true)
+    }
+  }
+  const onPointerMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const id = e.pointerId
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    setActivePointers((prev) => ({ ...prev, [id]: pos }))
+    if (Object.keys(activePointers).length >= 2) {
+      const ids = Object.keys(activePointers)
+      if (ids.length >= 2) {
+        const p1 = activePointers[ids[0]]
+        const p2 = activePointers[ids[1]]
+        const dist = getDistance(p1, p2)
+        if (pinchStart > 0) {
+          const ratio = dist / pinchStart
+          setZoomScale((s) => clamp(Number((s * ratio).toFixed(2)), 1.0, 3.0))
+        }
+      }
+    } else {
+      if (lensVisible && imgLoaded) {
+        const x = clamp(e.clientX - rect.left, 0, rect.width)
+        const y = clamp(e.clientY - rect.top, 0, rect.height)
+        setLensPos({ x, y })
+      }
+    }
+  }
+  const onPointerUp = (e) => {
+    const id = e.pointerId
+    setActivePointers((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+    if (Object.keys(activePointers).length < 2) {
+      setPinchStart(0)
+    }
+  }
+
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -103,7 +187,64 @@ const Product = () => {
               }
           </div>
           <div className='w-full sm:w-[80%]'>
-              <img className='w-full h-auto' src={image} alt="" />
+              <div
+                className='relative w-full overflow-hidden border bg-white select-none'
+                role='img'
+                aria-label='Zoomable product image'
+                onMouseEnter={onEnter}
+                onMouseLeave={onLeave}
+                onMouseMove={onMove}
+                onWheel={onWheel}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                style={{ touchAction: 'none' }}
+              >
+                {!imgLoaded ? (
+                  <div className='absolute inset-0 flex items-center justify-center'>
+                    <div className='animate-pulse w-12 h-12 rounded-full border-4 border-gray-300 border-t-gray-600'></div>
+                  </div>
+                ) : null}
+                <img
+                  className='w-full h-auto block'
+                  src={image}
+                  alt={productData.name}
+                  onLoad={onImageLoad}
+                />
+                <button
+                  type='button'
+                  aria-pressed={zoomEnabled}
+                  onClick={toggleZoom}
+                  className={`absolute top-3 right-3 px-3 py-1 text-xs rounded ${zoomEnabled ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                >
+                  {zoomEnabled ? 'Zoom On' : 'Zoom Off'}
+                </button>
+                <div className='absolute top-3 left-3 text-xs bg-white/80 border px-2 py-1 rounded'>
+                  Click to Enable Zoom or Pinch
+                </div>
+                <div className='absolute bottom-3 right-3 flex items-center gap-2 bg-white/80 border px-2 py-1 rounded'>
+                  <button type='button' onClick={()=>setZoomScale((s)=>clamp(Number((s-0.1).toFixed(2)),1.0,3.0))} className='px-2 border rounded'>-</button>
+                  <span className='text-xs'>{zoomScale.toFixed(2)}x</span>
+                  <button type='button' onClick={()=>setZoomScale((s)=>clamp(Number((s+0.1).toFixed(2)),1.0,3.0))} className='px-2 border rounded'>+</button>
+                </div>
+                {lensVisible && zoomEnabled && imgLoaded ? (
+                  <div
+                    aria-hidden='true'
+                    className='absolute rounded-full border-2 border-gray-300 shadow-[0_0_0_4px_rgba(255,255,255,0.6)]'
+                    style={{
+                      width: 120,
+                      height: 120,
+                      left: lensPos.x - 60,
+                      top: lensPos.y - 60,
+                      backgroundImage: `url(${image})`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: `${imgNatural.w * zoomScale}px ${imgNatural.h * zoomScale}px`,
+                      backgroundPosition: `${-(lensPos.x * zoomScale - 60)}px ${-(lensPos.y * zoomScale - 60)}px`,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                ) : null}
+              </div>
           </div>
         </div>
 
@@ -196,11 +337,11 @@ const Product = () => {
             </div>
           ) : null}
           <hr className='mt-8 sm:w-4/5' />
-          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
+          {/* <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
               <p>100% Original product.</p>
               <p>Cash on delivery is available on this product.</p>
               <p>Easy return and exchange policy within 7 days.</p>
-          </div>
+          </div> */}
         </div>
       </div>
 

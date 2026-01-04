@@ -22,7 +22,7 @@ import PaymentFailed from './pages/PaymentFailed'
 
 const App = () => {
   return (
-    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]' style={{ background: '#ffd0abbd', paddingLeft: '0%', paddingRight: '0%' }}>
       <ToastContainer />
       <Navbar />
       <SearchBar />
