@@ -11,24 +11,13 @@ const About = () => {
           <Title text1={'ABOUT'} text2={'US'} />
       </div>
 
-      <div className='my-5 flex flex-col md:flex-row gap-16'>
-          <img className='w-[90%] sm:w-[80%] md:max-w-[360px]' src={assets.about_img} alt="About Priwar Collection" />
-          <div className='flex flex-col justify-center gap-6 md:w-2/4 text-gray-1000'>
-              <p>Pariwar Collection is an imitation jewellery brand founded in October 2023 by Varsha Mangesh Diwale, inspired by the belief that jewellery is not just an ornament, but a part of family traditions, celebrations, and cherished memories.</p>
-              <p>Built through years of offline experience at exhibitions and curated stalls, Pariwar Collection is rooted in trust, personal connections, and a deep understanding of customer preferences. Every piece is carefully researched and thoughtfully selected using quality materials to ensure elegance, durability, and a premium finish.</p>
-              <p>Specializing in traditional ornaments, our collections reflect grace, heritage, and timeless luxury. Designed for everyday elegance as well as festive and special occasions, our jewellery is created to be worn with pride, gifted with love, and treasured across generations.</p>
-              <p>At Pariwar Collection, jewellery is more than fashion, it becomes part of the family.</p>
-              {/* <div className='mt-4'>
-                <p className='text-gray-800 font-medium'>Instagram Bio</p>
-                <p>Pariwar Collection</p>
-                <p>Imitation Jewellery | Traditional Ornaments</p>
-                <p>Where Jewellery Becomes Family 💍</p>
-                <p>Offline Exhibitions | Since 2023</p>
-                <p>9819506672</p>
-              </div> */}
-              {/* <b className='text-gray-800'>Our Craftsmanship</b>
-              <p>Our collections are a testament to the skill of our master artisans. Each piece is meticulously handcrafted, blending contemporary design sensibilities with traditional techniques passed down through generations. Whether it's the intricate detailing of a Polki necklace or the sleek lines of a diamond ring, our jewelry embodies a perfect harmony of art and precision.</p>
-           */}
+      <div className='my-10 flex flex-col md:flex-row gap-12 items-center max-w-6xl mx-auto px-4'>
+          <img className='w-full md:w-1/2 lg:w-2/5 rounded-lg shadow-lg' src={assets.about_img} alt="About Pariwar Collection" />
+          <div className='flex flex-col justify-center gap-6 md:w-1/2 lg:w-3/5'>
+              <p className='text-lg text-gray-700 leading-relaxed'>Pariwar Collection is an imitation jewellery brand founded in October 2023 by Varsha Mangesh Diwale, inspired by the belief that jewellery is not just an ornament, but a part of family traditions, celebrations, and cherished memories.</p>
+              <p className='text-lg text-gray-700 leading-relaxed'>Built through years of offline experience at exhibitions and curated stalls, Pariwar Collection is rooted in trust, personal connections, and a deep understanding of customer preferences. Every piece is carefully researched and thoughtfully selected using quality materials to ensure elegance, durability, and a premium finish.</p>
+              <p className='text-lg text-gray-700 leading-relaxed'>Specializing in traditional ornaments, our collections reflect grace, heritage, and timeless luxury. Designed for everyday elegance as well as festive and special occasions, our jewellery is created to be worn with pride, gifted with love, and treasured across generations.</p>
+              <p className='text-xl font-semibold text-[#53131f]'>At Pariwar Collection, jewellery is more than fashion, it becomes part of the family.</p>
           </div>
       </div>
 

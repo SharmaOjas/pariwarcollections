@@ -1,18 +1,19 @@
 import { useContext, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { ShopContext } from '../context/ShopContext';
-import { assets } from '../assets/assets';
-import RelatedProducts from '../components/RelatedProducts';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import { useParams, Link } from 'react-router-dom'
+import { ShopContext } from '../context/ShopContext'
+import { assets } from '../assets/assets'
+import RelatedProducts from '../components/RelatedProducts'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const Product = () => {
 
-  const { productId } = useParams();
-  const { products, currency ,addToCart, backendUrl } = useContext(ShopContext);
-  const [productData, setProductData] = useState(false);
+  const { productId } = useParams()
+  const { products, currency, addToCart, backendUrl } = useContext(ShopContext)
+
+  const [productData, setProductData] = useState(false)
   const [image, setImage] = useState('')
-  const [size,setSize] = useState('')
+  const [size, setSize] = useState('')
   const [customSize, setCustomSize] = useState('')
   const [subEmail, setSubEmail] = useState('')
   const [subPhone, setSubPhone] = useState('')
@@ -20,151 +21,125 @@ const Product = () => {
   const [channelsWhatsapp, setChannelsWhatsapp] = useState(false)
   const [preferredLanguage, setPreferredLanguage] = useState('en')
   const [submitting, setSubmitting] = useState(false)
-  const computedStatus = productData ? (productData.inventoryStatus === 'Coming Soon' ? 'Coming Soon' : ((productData.inventoryQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock')) : 'Coming Soon';
 
+  const computedStatus = productData
+    ? productData.inventoryStatus === 'Coming Soon'
+      ? 'Coming Soon'
+      : (productData.inventoryQuantity || 0) > 0
+        ? 'In Stock'
+        : 'Out of Stock'
+    : 'Coming Soon'
+
+  /* ---------------- ZOOM LOGIC ---------------- */
   const [zoomEnabled, setZoomEnabled] = useState(false)
   const [zoomScale, setZoomScale] = useState(1.3)
   const [lensVisible, setLensVisible] = useState(false)
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 })
   const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 })
   const [imgLoaded, setImgLoaded] = useState(false)
-  const [pinchStart, setPinchStart] = useState(0)
   const [activePointers, setActivePointers] = useState({})
+
+  const clamp = (val, min, max) => Math.min(Math.max(val, min), max)
 
   const onImageLoad = (e) => {
     setImgNatural({ w: e.target.naturalWidth, h: e.target.naturalHeight })
     setImgLoaded(true)
   }
-  const clamp = (val, min, max) => Math.min(Math.max(val, min), max)
-  const onEnter = () => { if (zoomEnabled && imgLoaded) setLensVisible(true) }
+
+  const onEnter = () => zoomEnabled && imgLoaded && setLensVisible(true)
   const onLeave = () => setLensVisible(false)
+
   const onMove = (e) => {
     if (!lensVisible || !imgLoaded) return
     const rect = e.currentTarget.getBoundingClientRect()
-    const x = clamp(e.clientX - rect.left, 0, rect.width)
-    const y = clamp(e.clientY - rect.top, 0, rect.height)
-    setLensPos({ x, y })
+    setLensPos({
+      x: clamp(e.clientX - rect.left, 0, rect.width),
+      y: clamp(e.clientY - rect.top, 0, rect.height)
+    })
   }
-  const toggleZoom = () => setZoomEnabled((z) => !z)
+
+  const toggleZoom = () => setZoomEnabled(z => !z)
+
   const onWheel = (e) => {
     if (!zoomEnabled) return
     const delta = e.deltaY < 0 ? 0.1 : -0.1
-    setZoomScale((s) => clamp(Number((s + delta).toFixed(2)), 1.0, 2.5))
-  }
-  const getDistance = (p1, p2) => Math.hypot(p2.x - p1.x, p2.y - p1.y)
-  const onPointerDown = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const id = e.pointerId
-    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
-    setActivePointers((prev) => ({ ...prev, [id]: pos }))
-    if (Object.keys(activePointers).length + 1 >= 2) {
-      const ids = Object.keys({ ...activePointers, [id]: pos })
-      const p1 = activePointers[ids[0]] || pos
-      const p2 = activePointers[ids[1]] || pos
-      setPinchStart(getDistance(p1, p2))
-      if (!zoomEnabled && imgLoaded) {
-        setZoomEnabled(true)
-        setLensVisible(true)
-      }
-    } else {
-      if (zoomEnabled && imgLoaded) setLensVisible(true)
-    }
-  }
-  const onPointerMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const id = e.pointerId
-    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
-    setActivePointers((prev) => ({ ...prev, [id]: pos }))
-    if (Object.keys(activePointers).length >= 2) {
-      const ids = Object.keys(activePointers)
-      if (ids.length >= 2) {
-        const p1 = activePointers[ids[0]]
-        const p2 = activePointers[ids[1]]
-        const dist = getDistance(p1, p2)
-        if (pinchStart > 0) {
-          const ratio = dist / pinchStart
-          setZoomScale((s) => clamp(Number((s * ratio).toFixed(2)), 1.0, 3.0))
-        }
-      }
-    } else {
-      if (lensVisible && imgLoaded) {
-        const x = clamp(e.clientX - rect.left, 0, rect.width)
-        const y = clamp(e.clientY - rect.top, 0, rect.height)
-        setLensPos({ x, y })
-      }
-    }
-  }
-  const onPointerUp = (e) => {
-    const id = e.pointerId
-    setActivePointers((prev) => {
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-    if (Object.keys(activePointers).length < 2) {
-      setPinchStart(0)
-    }
+    setZoomScale(s => clamp(Number((s + delta).toFixed(2)), 1, 2.5))
   }
 
+  const onPointerDown = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    setActivePointers(prev => ({ ...prev, [e.pointerId]: pos }))
+  }
+
+  const onPointerMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    setActivePointers(prev => ({ ...prev, [e.pointerId]: pos }))
+  }
+
+  const onPointerUp = (e) => {
+    setActivePointers(prev => {
+      const copy = { ...prev }
+      delete copy[e.pointerId]
+      return copy
+    })
+  }
+
+  /* ---------------- DATA LOAD ---------------- */
   useEffect(() => {
     const loadProduct = async () => {
       try {
-        const { data } = await axios.post(backendUrl + '/api/product/single', { productId })
+        const { data } = await axios.post(
+          backendUrl + '/api/product/single',
+          { productId }
+        )
         if (data.success) {
           setProductData(data.product)
           setImage(data.product.image[0])
-        } else {
-          // fallback to context list if any issue
-          products.map((item) => {
-            if (item._id === productId) {
-              setProductData(item)
-              setImage(item.image[0])
-            }
-            return null;
-          })
         }
-      } catch (error) {
-        products.map((item) => {
+      } catch {
+        products.forEach(item => {
           if (item._id === productId) {
             setProductData(item)
             setImage(item.image[0])
           }
-          return null;
         })
       }
     }
-    loadProduct();
+    loadProduct()
   }, [productId, backendUrl, products])
 
+  /* ---------------- SUBSCRIBE ---------------- */
   const subscribeBackInStock = async () => {
+    if (!subEmail && !subPhone) {
+      toast.error('Enter email or phone')
+      return
+    }
+    if (!channelsEmail && !channelsWhatsapp) {
+      toast.error('Select at least one channel')
+      return
+    }
+
     try {
-      if (!productData?._id) return
-      const email = subEmail.trim()
-      const phone = subPhone.trim()
-      if (!email && !phone) {
-        toast.error('Enter email or phone')
-        return
-      }
-      if (!channelsEmail && !channelsWhatsapp) {
-        toast.error('Select at least one channel')
-        return
-      }
       setSubmitting(true)
-      const payload = {
-        productId: productData._id,
-        email,
-        phone,
-        channels: { email: channelsEmail, whatsapp: channelsWhatsapp },
-        preferredLanguage
-      }
-      const { data } = await axios.post(backendUrl + '/api/notify/subscribe', payload)
-      if (data.success) {
-        toast.success('Subscribed for back-in-stock')
-        setSubEmail('')
-        setSubPhone('')
-      } else {
-        toast.error(data.message || 'Subscription failed')
-      }
+      const { data } = await axios.post(
+        backendUrl + '/api/notify/subscribe',
+        {
+          productId: productData._id,
+          email: subEmail,
+          phone: subPhone,
+          channels: {
+            email: channelsEmail,
+            whatsapp: channelsWhatsapp
+          },
+          preferredLanguage
+        }
+      )
+
+      data.success
+        ? toast.success('Subscribed for back-in-stock')
+        : toast.error(data.message)
     } catch (e) {
       toast.error(e.message)
     } finally {
@@ -172,197 +147,252 @@ const Product = () => {
     }
   }
 
-  return productData ? (
-    <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
-      {/*----------- Product Data-------------- */}
-      <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
+  /* ---------------- ICONS FOR UI ---------------- */
+  const TruckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mb-1">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0 1.5 1.5 0 013 0zm0 0h10.5m-10.5 0H3.75a1.125 1.125 0 01-1.125-1.125V8.25a1.125 1.125 0 011.125-1.125h13.5a1.125 1.125 0 011.125 1.125v4.5m-3.75 6a1.5 1.5 0 01-3 0 1.5 1.5 0 013 0zm0 0h3.75m.75-.75v-4.5h2.25l2.25 2.25v2.25h-2.25" />
+    </svg>
+  )
+  const ShieldIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mb-1">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+    </svg>
+  )
+  const ReturnIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mb-1">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+    </svg>
+  )
 
-        {/*---------- Product Images------------- */}
-        <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
-          <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
-              {
-                productData.image.map((item,index)=>(
-                  <img onClick={()=>setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer' alt="" />
-                ))
-              }
-          </div>
-          <div className='w-full sm:w-[80%]'>
-              <div
-                className='relative w-full overflow-hidden border bg-white select-none'
-                role='img'
-                aria-label='Zoomable product image'
-                onMouseEnter={onEnter}
-                onMouseLeave={onLeave}
-                onMouseMove={onMove}
-                onWheel={onWheel}
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                style={{ touchAction: 'none' }}
-              >
-                {!imgLoaded ? (
-                  <div className='absolute inset-0 flex items-center justify-center'>
-                    <div className='animate-pulse w-12 h-12 rounded-full border-4 border-gray-300 border-t-gray-600'></div>
-                  </div>
-                ) : null}
-                <img
-                  className='w-full h-auto block'
-                  src={image}
-                  alt={productData.name}
-                  onLoad={onImageLoad}
-                />
-                <button
-                  type='button'
-                  aria-pressed={zoomEnabled}
-                  onClick={toggleZoom}
-                  className={`absolute top-3 right-3 px-3 py-1 text-xs rounded ${zoomEnabled ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
-                >
-                  {zoomEnabled ? 'Zoom On' : 'Zoom Off'}
-                </button>
-                <div className='absolute top-3 left-3 text-xs bg-white/80 border px-2 py-1 rounded'>
-                  Click to Enable Zoom or Pinch
-                </div>
-                <div className='absolute bottom-3 right-3 flex items-center gap-2 bg-white/80 border px-2 py-1 rounded'>
-                  <button type='button' onClick={()=>setZoomScale((s)=>clamp(Number((s-0.1).toFixed(2)),1.0,3.0))} className='px-2 border rounded'>-</button>
-                  <span className='text-xs'>{zoomScale.toFixed(2)}x</span>
-                  <button type='button' onClick={()=>setZoomScale((s)=>clamp(Number((s+0.1).toFixed(2)),1.0,3.0))} className='px-2 border rounded'>+</button>
-                </div>
-                {lensVisible && zoomEnabled && imgLoaded ? (
-                  <div
-                    aria-hidden='true'
-                    className='absolute rounded-full border-2 border-gray-300 shadow-[0_0_0_4px_rgba(255,255,255,0.6)]'
-                    style={{
-                      width: 120,
-                      height: 120,
-                      left: lensPos.x - 60,
-                      top: lensPos.y - 60,
-                      backgroundImage: `url(${image})`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: `${imgNatural.w * zoomScale}px ${imgNatural.h * zoomScale}px`,
-                      backgroundPosition: `${-(lensPos.x * zoomScale - 60)}px ${-(lensPos.y * zoomScale - 60)}px`,
-                      pointerEvents: 'none'
-                    }}
-                  />
-                ) : null}
-              </div>
-          </div>
+  /* ---------------- RENDER ---------------- */
+  return productData ? (
+    <div className="pt-6 transition-opacity ease-in duration-500 opacity-100 pb-20 border-t border-gray-200">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* 1. Breadcrumbs */}
+        <div className="flex items-center text-xs text-gray-500 mb-8 tracking-wide uppercase">
+            <Link to='/' className="hover:text-black hover:underline">Home</Link>
+            <span className="mx-2">/</span>
+            <Link to='/collection' className="hover:text-black hover:underline">Collection</Link>
+            <span className="mx-2">/</span>
+            <span className="text-black font-medium">{productData.name}</span>
         </div>
 
-        {/* -------- Product Info ---------- */}
-        <div className='flex-1'>
-          <h1 className='font-medium text-2xl mt-2'>{productData.name}</h1>
-          <div className=' flex items-center gap-1 mt-2'>
-              <img src={assets.star_icon} alt="" className="w-3 5" />
-              <img src={assets.star_icon} alt="" className="w-3 5" />
-              <img src={assets.star_icon} alt="" className="w-3 5" />
-              <img src={assets.star_icon} alt="" className="w-3 5" />
-              <img src={assets.star_dull_icon} alt="" className="w-3 5" />
-              <p className='pl-2'>(122)</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+
+          {/* LEFT — IMAGES (Sticky on Desktop) */}
+          <div className="flex flex-col-reverse lg:flex-row gap-4 h-fit lg:sticky lg:top-24">
+
+            {/* Thumbnails */}
+            <div className="flex lg:flex-col gap-3 lg:w-[15%] overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
+              {productData.image.map((img, i) => (
+                <img
+                  key={i}
+                  src={img}
+                  onClick={() => setImage(img)}
+                  className={`cursor-pointer w-20 lg:w-full rounded-sm object-cover border transition-all duration-200 aspect-square ${
+                    image === img ? 'border-black opacity-100 ring-1 ring-black' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'
+                  }`}
+                  alt="Thumbnail"
+                />
+              ))}
+            </div>
+
+            {/* Main Image & Zoom */}
+            <div
+              className="lg:w-[85%] relative bg-white flex items-center justify-center rounded-sm overflow-hidden"
+              onMouseEnter={onEnter}
+              onMouseLeave={onLeave}
+              onMouseMove={onMove}
+              onWheel={onWheel}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              style={{ touchAction: 'none' }}
+            >
+              <img
+                src={image}
+                alt={productData.name}
+                onLoad={onImageLoad}
+                className="w-full h-auto object-cover max-h-[700px] hover:scale-[1.02] transition-transform duration-500"
+              />
+
+              <button
+                onClick={toggleZoom}
+                className={`absolute top-4 right-4 text-[10px] font-bold tracking-widest px-4 py-2 rounded-full transition-all duration-300 backdrop-blur-md z-10 uppercase ${
+                  zoomEnabled 
+                    ? 'bg-black text-white' 
+                    : 'bg-white/90 text-black shadow-md hover:bg-black hover:text-white'
+                }`}
+              >
+                {zoomEnabled ? 'Zoom On' : 'Zoom'}
+              </button>
+
+              {lensVisible && zoomEnabled && imgLoaded && (
+                <div
+                  className="absolute border-2 border-white/50 rounded-full pointer-events-none shadow-2xl z-20 bg-white"
+                  style={{
+                    width: 180,
+                    height: 180,
+                    left: lensPos.x - 90,
+                    top: lensPos.y - 90,
+                    backgroundImage: `url(${image})`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: `${imgNatural.w * zoomScale}px ${imgNatural.h * zoomScale}px`,
+                    backgroundPosition: `${-(lensPos.x * zoomScale - 90)}px ${-(lensPos.y * zoomScale - 90)}px`
+                  }}
+                />
+              )}
+            </div>
+
           </div>
-          <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
-          <p className='mt-2 text-sm'>{computedStatus}</p>
-          <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
-          <div className='flex flex-col gap-4 my-8'>
-              <p>Select Size</p>
-              <div className='flex gap-2'>
-                {productData.sizes.map((item,index)=>(
-                  <button onClick={()=>setSize(item)} className={`border py-2 px-4 bg-gray-100 ${item === size ? 'border-orange-500' : ''}`} key={index}>{item}</button>
+
+          {/* RIGHT — INFO */}
+          <div className="flex flex-col">
+
+            <h1 className="text-3xl lg:text-4xl font-serif text-gray-900 tracking-wide mb-2">
+                {productData.name}
+            </h1>
+
+            {/* Ratings & Status Row */}
+            <div className="flex items-center justify-between mb-6">
+                {/* <div className="flex items-center gap-1">
+                    <div className="flex text-yellow-500">
+                        {[1,2,3,4].map(i => (
+                            <img key={i} src={assets.star_icon} className="w-3.5 h-3.5" alt="star" />
+                        ))}
+                        <img src={assets.star_dull_icon} className="w-3.5 h-3.5" alt="star empty" />
+                    </div>
+                    <span className="text-xs text-gray-500 ml-2 border-b border-gray-300 pb-0.5">(122 Reviews)</span>
+                </div> */}
+                
+                <div className={`text-xs font-medium px-2 py-1 rounded ${
+                    computedStatus === 'In Stock' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                    {computedStatus}
+                </div>
+            </div>
+
+            {/* Price */}
+            <div className="mb-8">
+              <p className="text-3xl font-medium text-gray-900">
+                {currency}{productData.price}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Tax included. Shipping calculated at checkout.</p>
+            </div>
+
+            {/* Size Selector */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm font-medium text-[#B89B2E] uppercase tracking-wide">Select Size</p>
+                  {/* <button className="text-xs text-gray-500 underline hover:text-black">Size Guide</button> */}
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {productData.sizes.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSize(item)}
+                    className={`min-w-[3.5rem] h-12 px-2 border transition-all duration-200 text-sm font-medium ${
+                      size === item 
+                        ? 'border-black bg-black text-white' 
+                        : 'border-[#B89B2E] text-gray-700 hover:border-black'
+                    }`}
+                  >
+                    {item}
+                  </button>
                 ))}
               </div>
-              {productData.allowCustomSize ? (
-                <div className='flex gap-2 mt-3'>
+
+              {productData.allowCustomSize && (
+                <div className="flex gap-2 mt-4 max-w-sm">
                   <input
                     value={customSize}
-                    onChange={(e)=>{ setCustomSize(e.target.value); setSize(e.target.value); }}
-                    className='border py-2 px-4 bg-white'
-                    type='text'
-                    placeholder='Enter custom size'
+                    onChange={(e) => {
+                      setCustomSize(e.target.value)
+                      setSize(e.target.value)
+                    }}
+                    className="border border-gray-300 px-4 py-2 w-full text-sm focus:outline-none focus:border-black transition-colors"
+                    placeholder="Enter custom size"
                   />
-                  <button
-                    onClick={()=> customSize && setSize(customSize)}
-                    className='border py-2 px-4 bg-gray-100'
-                    type='button'
-                  >
-                    Use Custom Size
+                  <button className="bg-gray-100 border border-gray-200 px-4 py-2 text-xs font-bold uppercase hover:bg-gray-200 transition-colors">
+                    Apply
                   </button>
                 </div>
-              ) : null}
-          </div>
-          <button
-            disabled={computedStatus !== 'In Stock'}
-            onClick={()=>addToCart(productData._id,size)}
-            className={`px-8 py-3 text-sm ${computedStatus === 'In Stock' ? 'bg-black text-white active:bg-gray-700' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
-          >
-            ADD TO CART
-          </button>
-          {computedStatus !== 'In Stock' ? (
-            <div className='mt-6 border rounded p-4 sm:w-4/5'>
-              <p className='text-sm font-medium mb-3'>Notify me when available</p>
-              <div className='flex flex-col gap-3'>
-                <input
-                  value={subEmail}
-                  onChange={(e)=>setSubEmail(e.target.value)}
-                  className='border py-2 px-3 bg-white'
-                  type='email'
-                  placeholder='Email'
-                />
-                <input
-                  value={subPhone}
-                  onChange={(e)=>setSubPhone(e.target.value)}
-                  className='border py-2 px-3 bg-white'
-                  type='tel'
-                  placeholder='WhatsApp number'
-                />
-                <div className='flex items-center gap-6'>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <input type='checkbox' checked={channelsEmail} onChange={(e)=>setChannelsEmail(e.target.checked)} />
-                    Email
-                  </label>
-                  <label className='flex items-center gap-2 text-sm'>
-                    <input type='checkbox' checked={channelsWhatsapp} onChange={(e)=>setChannelsWhatsapp(e.target.checked)} />
-                    WhatsApp
-                  </label>
-                  <select value={preferredLanguage} onChange={(e)=>setPreferredLanguage(e.target.value)} className='border py-2 px-2 text-sm'>
-                    <option value='en'>English</option>
-                  </select>
+              )}
+            </div>
+
+            {/* Add to Cart */}
+            <button
+              disabled={computedStatus !== 'In Stock'}
+              onClick={() => addToCart(productData._id, size)}
+              className={`w-full py-4 text-sm font-bold tracking-widest uppercase transition-all duration-300 mb-6 ${
+                computedStatus === 'In Stock'
+                  ? 'bg-[#53131f] text-white hover:bg-gray-800 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {computedStatus === 'In Stock' ? 'Add to Cart' : 'Sold Out'}
+            </button>
+            
+            
+
+            {/* Back in Stock Notification */}
+            {computedStatus !== 'In Stock' && (
+              <div className="mb-10 bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <p className="text-xs font-bold text-gray-900 mb-4 uppercase tracking-wide">
+                  Notify me when available
+                </p>
+
+                <div className="space-y-3">
+                    <input
+                      value={subEmail}
+                      onChange={(e) => setSubEmail(e.target.value)}
+                      className="border border-gray-300 rounded-none px-4 py-3 w-full text-sm focus:outline-none focus:border-black focus:ring-0 transition-all placeholder-gray-400"
+                      placeholder="Email Address"
+                    />
+
+                    <input
+                      value={subPhone}
+                      onChange={(e) => setSubPhone(e.target.value)}
+                      className="border border-gray-300 rounded-none px-4 py-3 w-full text-sm focus:outline-none focus:border-black focus:ring-0 transition-all placeholder-gray-400"
+                      placeholder="WhatsApp Number"
+                    />
                 </div>
+
                 <button
                   onClick={subscribeBackInStock}
                   disabled={submitting}
-                  className={`px-6 py-2 text-sm ${submitting ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white active:bg-gray-700'}`}
+                  className="mt-4 w-full bg-gray-900 text-white px-6 py-3 text-xs font-bold uppercase tracking-wider hover:bg-black transition-colors"
                 >
-                  {submitting ? 'Submitting...' : 'Notify Me'}
+                  {submitting ? 'Submitting…' : 'Notify Me'}
                 </button>
               </div>
+            )}
+
+            {/* Description Only Section */}
+            <div className="mt-2">
+               <h3 className="text-sm font-bold uppercase tracking-wide text-gray-900 mb-4">Description</h3>
+               <div className="text-gray-600 text-sm leading-relaxed space-y-4">
+                  <p>{productData.description}</p>
+                  <p>Handcrafted with precision, this piece is designed to be a timeless addition to your collection. Made from premium materials ensuring durability and long-lasting shine.</p>
+               </div>
             </div>
-          ) : null}
-          <hr className='mt-8 sm:w-4/5' />
-          {/* <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
-              <p>100% Original product.</p>
-              <p>Cash on delivery is available on this product.</p>
-              <p>Easy return and exchange policy within 7 days.</p>
-          </div> */}
+
+          </div>
         </div>
+
+        {/* Related Products Section */}
+       <div className="mt-24 border-t border-[#B89B2E]">
+
+          
+          <RelatedProducts category={productData.category} />
+        </div>
+
       </div>
-
-      {/* ---------- Description & Review Section -------------
-      <div className='mt-20'>
-        <div className='flex'>
-          <b className='border px-5 py-3 text-sm'>Description</b>
-          <p className='border px-5 py-3 text-sm'>Reviews (122)</p>
-        </div>
-        <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
-          <p>An e-commerce website is an online platform that facilitates the buying and selling of products or services over the internet. It serves as a virtual marketplace where businesses and individuals can showcase their products, interact with customers, and conduct transactions without the need for a physical presence. E-commerce websites have gained immense popularity due to their convenience, accessibility, and the global reach they offer.</p>
-          <p>E-commerce websites typically display products or services along with detailed descriptions, images, prices, and any available variations (e.g., sizes, colors). Each product usually has its own dedicated page with relevant information.</p>
-        </div>
-      </div> */}
-
-      {/* --------- display related products ---------- */}
-
-      <RelatedProducts category={productData.category} />
-
     </div>
-  ) : <div className=' opacity-0'></div>
+  ) : null
 }
 
 export default Product
