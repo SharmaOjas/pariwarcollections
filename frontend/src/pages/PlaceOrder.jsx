@@ -10,7 +10,7 @@ const PlaceOrder = () => {
 
     const [method, setMethod] = useState('cod');
     const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products, getCartCount } = useContext(ShopContext);
-    
+
     // Check authentication and cart
     useEffect(() => {
         if (!token) {
@@ -18,7 +18,7 @@ const PlaceOrder = () => {
             navigate('/login', { replace: true })
             return
         }
-        
+
         if (getCartCount() === 0) {
             toast.error('Your cart is empty')
             navigate('/cart', { replace: true })
@@ -44,7 +44,7 @@ const PlaceOrder = () => {
         const value = event.target.value
         setFormData(data => ({ ...data, [name]: value }))
     }
-    
+
     const onApplyCoupon = () => {
         if (!couponCode.trim()) {
             toast.error('Enter a coupon code');
@@ -59,14 +59,14 @@ const PlaceOrder = () => {
             key: import.meta.env.VITE_RAZORPAY_KEY_ID,
             amount: order.amount,
             currency: order.currency,
-            name:'Order Payment',
-            description:'Order Payment',
+            name: 'Order Payment',
+            description: 'Order Payment',
             order_id: order.id,
             receipt: order.receipt,
             handler: async (response) => {
                 try {
-                    
-                    const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay',response,{headers:{token}})
+
+                    const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay', response, { headers: { token } })
                     if (data.success) {
                         sessionStorage.setItem('orderPlaced', 'true')
                         navigate('/order-placed', { state: { orderPlaced: true } })
@@ -85,37 +85,37 @@ const PlaceOrder = () => {
 
     const onSubmitHandler = async (event) => {
         event.preventDefault()
-        
+
         // Check authentication
         if (!token) {
             toast.error('Please login to place an order')
             navigate('/login')
             return
         }
-        
+
         // Check if cart is empty
         if (getCartCount() === 0) {
             toast.error('Your cart is empty')
             navigate('/cart')
             return
         }
-        
+
         // Validate form data
         const requiredFields = ['firstName', 'lastName', 'email', 'street', 'city', 'state', 'zipcode', 'country', 'phone']
         const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '')
-        
+
         if (missingFields.length > 0) {
             toast.error('Please fill in all required fields')
             return
         }
-        
+
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(formData.email)) {
             toast.error('Please enter a valid email address')
             return
         }
-        
+
         try {
 
             let orderItems = []
@@ -132,7 +132,7 @@ const PlaceOrder = () => {
                     }
                 }
             }
-            
+
             // Double check orderItems is not empty
             if (orderItems.length === 0) {
                 toast.error('Your cart is empty')
@@ -145,14 +145,14 @@ const PlaceOrder = () => {
                 items: orderItems,
                 amount: getCartAmount() + delivery_fee
             }
-            
+
 
             switch (method) {
 
                 // API Calls for COD
                 case 'cod':
                     {
-                        const response = await axios.post(backendUrl + '/api/order/place',orderData,{headers:{token}})
+                        const response = await axios.post(backendUrl + '/api/order/place', orderData, { headers: { token } })
                         if (response.data.success) {
                             setCartItems({})
                             sessionStorage.setItem('orderPlaced', 'true')
@@ -165,9 +165,9 @@ const PlaceOrder = () => {
 
                 case 'stripe':
                     {
-                        const responseStripe = await axios.post(backendUrl + '/api/order/stripe',orderData,{headers:{token}})
+                        const responseStripe = await axios.post(backendUrl + '/api/order/stripe', orderData, { headers: { token } })
                         if (responseStripe.data.success) {
-                            const {session_url} = responseStripe.data
+                            const { session_url } = responseStripe.data
                             window.location.replace(session_url)
                         } else {
                             toast.error(responseStripe.data.message)
@@ -178,7 +178,7 @@ const PlaceOrder = () => {
                 case 'razorpay':
 
                     {
-                        const responseRazorpay = await axios.post(backendUrl + '/api/order/razorpay', orderData, {headers:{token}})
+                        const responseRazorpay = await axios.post(backendUrl + '/api/order/razorpay', orderData, { headers: { token } })
                         if (responseRazorpay.data.success) {
                             initPay(responseRazorpay.data.order)
                         }
@@ -196,79 +196,103 @@ const PlaceOrder = () => {
         }
     }
 
+    // Design helper classes
+    const inputStyle = 'border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-white';
+    const paymentOptionStyle = (paymentMethod) => `flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors ${method === paymentMethod ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200'}`;
 
     return (
-        <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
-            {/* ------------- Left Side ---------------- */}
-            <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
+        <form onSubmit={onSubmitHandler} className='flex flex-col lg:flex-row justify-between gap-8 pt-5 sm:pt-14 min-h-[80vh] border-t max-w-7xl mx-auto px-4 sm:px-6'>
+            
+            {/* ------------- Left Side (Delivery Details) ---------------- */}
+            <div className='flex flex-col gap-6 w-full lg:max-w-[600px]'>
 
                 <div className='text-xl sm:text-2xl my-3'>
                     <Title text1={'DELIVERY'} text2={'INFORMATION'} />
                 </div>
+                
                 <div className='flex gap-3'>
-                    <input  onChange={onChangeHandler} name='firstName' value={formData.firstName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='First name' />
-                    <input onChange={onChangeHandler} name='lastName' value={formData.lastName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Last name' />
+                    <input onChange={onChangeHandler} name='firstName' value={formData.firstName} className={inputStyle} type="text" placeholder='First name' />
+                    <input onChange={onChangeHandler} name='lastName' value={formData.lastName} className={inputStyle} type="text" placeholder='Last name' />
                 </div>
-                <input onChange={onChangeHandler} name='email' value={formData.email} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="email" placeholder='Email address' />
-                <input onChange={onChangeHandler} name='street' value={formData.street} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Street' />
+                
+                <input onChange={onChangeHandler} name='email' value={formData.email} className={inputStyle} type="email" placeholder='Email address' />
+                <input onChange={onChangeHandler} name='street' value={formData.street} className={inputStyle} type="text" placeholder='Street Address' />
+                
                 <div className='flex gap-3'>
-                    <input onChange={onChangeHandler} name='city' value={formData.city} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='City' />
-                    <input onChange={onChangeHandler} name='state' value={formData.state} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='State' />
+                    <input onChange={onChangeHandler} name='city' value={formData.city} className={inputStyle} type="text" placeholder='City' />
+                    <input onChange={onChangeHandler} name='state' value={formData.state} className={inputStyle} type="text" placeholder='State' />
                 </div>
+                
                 <div className='flex gap-3'>
-                    <input onChange={onChangeHandler} name='zipcode' value={formData.zipcode} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Zipcode' />
-                    <input onChange={onChangeHandler} name='country' value={formData.country} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Country' />
+                    <input onChange={onChangeHandler} name='zipcode' value={formData.zipcode} className={inputStyle} type="number" placeholder='Zipcode' />
+                    <input onChange={onChangeHandler} name='country' value={formData.country} className={inputStyle} type="text" placeholder='Country' />
                 </div>
-                <input onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
+                
+                <input onChange={onChangeHandler} name='phone' value={formData.phone} className={inputStyle} type="number" placeholder='Phone Number' />
             </div>
 
-            {/* ------------- Right Side ------------------ */}
-            <div className='mt-8'>
-
-                <div className='mt-8 min-w-80'>
+            {/* ------------- Right Side (Order Summary & Payment) ------------------ */}
+            <div className='mt-8 lg:mt-0 w-full lg:max-w-[500px]'>
+                
+                {/* Wrapped in a Card for better visual separation */}
+                <div className='bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-100 sticky top-20'>
+                    
                     {/* ---------- Coupon Box ----------- */}
-                    <div className='mb-6'>
-                        <div className='text-xl sm:text-2xl'>
-                            <Title text1={'COUPON'} text2={'CODE'} />
-                        </div>
-                        <div className='flex gap-2 mt-3'>
+                    <div className='mb-8 border-b pb-6'>
+                        <div className='text-lg font-medium text-gray-700 mb-3'>Have a Coupon?</div>
+                        <div className='flex gap-0'>
                             <input
                                 value={couponCode}
-                                onChange={(e)=>setCouponCode(e.target.value)}
-                                className='border border-gray-300 rounded py-2 px-3.5 w-full'
+                                onChange={(e) => setCouponCode(e.target.value)}
+                                className='border border-gray-300 rounded-l-lg py-2 px-3.5 w-full outline-none focus:border-black'
                                 type='text'
-                                placeholder='Enter coupon code'
+                                placeholder='Enter code'
                             />
-                            <button type='button' onClick={onApplyCoupon} className='border px-5 py-2 rounded bg-gray-100'>
-                                Apply
+                            <button type='button' onClick={onApplyCoupon} className='border border-l-0 border-gray-300 px-6 py-2 rounded-r-lg bg-black text-white hover:bg-gray-800 transition-colors text-sm font-medium'>
+                                APPLY
                             </button>
                         </div>
-                        {couponApplied ? <p className='text-green-600 text-sm mt-1'>Coupon applied</p> : null}
-                    </div>
-                    
-                    <CartTotal />
-                </div>
-
-                <div className='mt-12'>
-                    <Title text1={'PAYMENT'} text2={'METHOD'} />
-                    {/* --------------- Payment Method Selection ------------- */}
-                    <div className='flex gap-3 flex-col lg:flex-row'>
-                        <div onClick={() => setMethod('stripe')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'stripe' ? 'bg-green-400' : ''}`}></p>
-                            <img className='h-5 mx-4' src={assets.stripe_logo} alt="" />
-                        </div>
-                        <div onClick={() => setMethod('razorpay')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'razorpay' ? 'bg-green-400' : ''}`}></p>
-                            <img className='h-5 mx-4' src={assets.razorpay_logo} alt="" />
-                        </div>
-                        <div onClick={() => setMethod('cod')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
-                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'cod' ? 'bg-green-400' : ''}`}></p>
-                            <p className='text-gray-500 text-sm font-medium mx-4'>CASH ON DELIVERY</p>
-                        </div>
+                        {couponApplied ? <p className='text-green-600 text-sm mt-2 flex items-center gap-1'>✓ Coupon applied successfully</p> : null}
                     </div>
 
-                    <div className='w-full text-end mt-8'>
-                        <button type='submit' className='bg-black text-white px-16 py-3 text-sm'>PLACE ORDER</button>
+                    <div className='mt-4'>
+                        <CartTotal />
+                    </div>
+
+                    <div className='mt-8'>
+                        <Title text1={'PAYMENT'} text2={'METHOD'} />
+                        
+                        {/* --------------- Payment Method Selection ------------- */}
+                        <div className='flex flex-col gap-3 mt-4'>
+                            
+                            {/* <div onClick={() => setMethod('stripe')} className={paymentOptionStyle('stripe')}>
+                                <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${method === 'stripe' ? 'border-green-500' : 'border-gray-300'}`}>
+                                    {method === 'stripe' && <div className='w-2 h-2 bg-green-500 rounded-full'></div>}
+                                </div>
+                                <img className='h-5 mx-2' src={assets.stripe_logo} alt="Stripe" />
+                            </div> */}
+
+                            <div onClick={() => setMethod('razorpay')} className={paymentOptionStyle('razorpay')}>
+                                <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${method === 'razorpay' ? 'border-green-500' : 'border-gray-300'}`}>
+                                     {method === 'razorpay' && <div className='w-2 h-2 bg-green-500 rounded-full'></div>}
+                                </div>
+                                <img className='h-5 mx-2' src={assets.razorpay_logo} alt="Razorpay" />
+                            </div>
+
+                            {/* <div onClick={() => setMethod('cod')} className={paymentOptionStyle('cod')}>
+                                <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${method === 'cod' ? 'border-green-500' : 'border-gray-300'}`}>
+                                     {method === 'cod' && <div className='w-2 h-2 bg-green-500 rounded-full'></div>}
+                                </div>
+                                <p className='text-gray-700 text-sm font-medium mx-2'>CASH ON DELIVERY</p>
+                            </div> */}
+
+                        </div>
+
+                        <div className='w-full text-end mt-8'>
+                            <button type='submit' className='bg-black text-white w-full py-4 rounded-lg font-medium text-sm hover:bg-gray-800 transition-transform active:scale-[0.99] shadow-md'>
+                                PLACE ORDER
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
