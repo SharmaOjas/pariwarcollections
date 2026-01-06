@@ -43,8 +43,19 @@ const LatestCollection = () => {
         transition={{ duration: 0.8, delay: 0.4 }}
         viewport={{ once: true }}
       >
-        {
-          latestProducts.map((item,index)=>(
+        {latestProducts.length === 0
+          ? Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                <div className="aspect-square relative">
+                  <div className="absolute inset-0 skeleton" />
+                </div>
+                <div className="p-4">
+                  <div className="h-4 w-3/4 skeleton rounded mb-2" />
+                  <div className="h-5 w-1/2 skeleton rounded" />
+                </div>
+              </div>
+            ))
+          : latestProducts.map((item,index)=>(
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0.9 }}

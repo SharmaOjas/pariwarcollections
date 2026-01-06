@@ -1,10 +1,10 @@
 import { useContext, useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext'
-import { assets } from '../assets/assets'
 import RelatedProducts from '../components/RelatedProducts'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import ProgressiveImage from '../components/ProgressiveImage'
 
 const Product = () => {
 
@@ -17,9 +17,9 @@ const Product = () => {
   const [customSize, setCustomSize] = useState('')
   const [subEmail, setSubEmail] = useState('')
   const [subPhone, setSubPhone] = useState('')
-  const [channelsEmail, setChannelsEmail] = useState(true)
-  const [channelsWhatsapp, setChannelsWhatsapp] = useState(false)
-  const [preferredLanguage, setPreferredLanguage] = useState('en')
+  const [channelsEmail] = useState(true)
+  const [channelsWhatsapp] = useState(false)
+  const [preferredLanguage] = useState('en')
   const [submitting, setSubmitting] = useState(false)
 
   const computedStatus = productData
@@ -37,7 +37,6 @@ const Product = () => {
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 })
   const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 })
   const [imgLoaded, setImgLoaded] = useState(false)
-  const [activePointers, setActivePointers] = useState({})
 
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max)
 
@@ -66,25 +65,7 @@ const Product = () => {
     setZoomScale(s => clamp(Number((s + delta).toFixed(2)), 1, 2.5))
   }
 
-  const onPointerDown = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
-    setActivePointers(prev => ({ ...prev, [e.pointerId]: pos }))
-  }
-
-  const onPointerMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
-    setActivePointers(prev => ({ ...prev, [e.pointerId]: pos }))
-  }
-
-  const onPointerUp = (e) => {
-    setActivePointers(prev => {
-      const copy = { ...prev }
-      delete copy[e.pointerId]
-      return copy
-    })
-  }
+ 
 
   /* ---------------- DATA LOAD ---------------- */
   useEffect(() => {
@@ -147,22 +128,6 @@ const Product = () => {
     }
   }
 
-  /* ---------------- ICONS FOR UI ---------------- */
-  const TruckIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mb-1">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0 1.5 1.5 0 013 0zm0 0h10.5m-10.5 0H3.75a1.125 1.125 0 01-1.125-1.125V8.25a1.125 1.125 0 011.125-1.125h13.5a1.125 1.125 0 011.125 1.125v4.5m-3.75 6a1.5 1.5 0 01-3 0 1.5 1.5 0 013 0zm0 0h3.75m.75-.75v-4.5h2.25l2.25 2.25v2.25h-2.25" />
-    </svg>
-  )
-  const ShieldIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mb-1">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-    </svg>
-  )
-  const ReturnIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mb-1">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-    </svg>
-  )
 
   /* ---------------- RENDER ---------------- */
   return productData ? (
@@ -187,15 +152,22 @@ const Product = () => {
             {/* Thumbnails */}
             <div className="flex lg:flex-col gap-3 lg:w-[15%] overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
               {productData.image.map((img, i) => (
-                <img
-                  key={i}
-                  src={img}
-                  onClick={() => setImage(img)}
-                  className={`cursor-pointer w-20 lg:w-full rounded-sm object-cover border transition-all duration-200 aspect-square ${
-                    image === img ? 'border-black opacity-100 ring-1 ring-black' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'
-                  }`}
-                  alt="Thumbnail"
-                />
+                <div key={i} className="w-20 lg:w-full aspect-square">
+                  <button
+                    onClick={() => setImage(img)}
+                    className={`block w-full h-full rounded-sm border transition-all duration-200 ${
+                      image === img ? 'border-black opacity-100 ring-1 ring-black' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'
+                    }`}
+                    aria-label="Select image"
+                  >
+                    <ProgressiveImage
+                      src={img}
+                      alt="Thumbnail"
+                      className="w-full h-full rounded-sm"
+                      imgClassName="object-cover"
+                    />
+                  </button>
+                </div>
               ))}
             </div>
 
@@ -206,16 +178,15 @@ const Product = () => {
               onMouseLeave={onLeave}
               onMouseMove={onMove}
               onWheel={onWheel}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
               style={{ touchAction: 'none' }}
             >
-              <img
+              <ProgressiveImage
                 src={image}
                 alt={productData.name}
                 onLoad={onImageLoad}
-                className="w-full h-auto object-cover max-h-[700px] hover:scale-[1.02] transition-transform duration-500"
+                className="w-full h-auto max-h-[700px]"
+                imgClassName="object-cover hover:scale-[1.02] transition-transform duration-500"
+                eager={true}
               />
 
               <button

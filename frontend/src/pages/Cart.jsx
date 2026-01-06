@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import Title from '../components/Title'
 import { assets } from '../assets/assets'
 import CartTotal from '../components/CartTotal'
 import { toast } from 'react-toastify'
 import { Link } from 'react-router-dom' // Added for empty state navigation
+import ProgressiveImage from '../components/ProgressiveImage'
 
 const Cart = () => {
   const { products, currency, cartItems, updateQuantity, navigate } =
@@ -59,7 +60,7 @@ const Cart = () => {
                 Your cart is empty
               </p>
               <p className="text-gray-500 mb-8 text-lg">
-                Looks like you haven't added anything to your bag yet.
+                Looks like you haven&#39;t added anything to your bag yet.
               </p>
               <Link to="/collection" className="inline-block px-10 py-4 bg-[#53131f] text-white rounded-full font-semibold hover:bg-[#3a0f1a] transition shadow-lg hover:shadow-xl hover:-translate-y-1">
                 Continue Shopping
@@ -77,11 +78,12 @@ const Cart = () => {
                 className="group bg-white rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row gap-8 items-center shadow-md hover:shadow-2xl transition-all duration-300 border border-transparent hover:border-[#53131f]/10 relative overflow-hidden"
               >
                 {/* Product Image */}
-                <div className="relative shrink-0">
-                    <img
-                    src={product.image[0]}
-                    alt={product.name}
-                    className="w-full sm:w-40 sm:h-48 rounded-2xl object-cover shadow-sm"
+                <div className="relative shrink-0 w-full sm:w-40 sm:h-48">
+                    <ProgressiveImage
+                      src={product.image[0]}
+                      alt={product.name}
+                      className="w-full h-full rounded-2xl"
+                      imgClassName="object-cover shadow-sm"
                     />
                 </div>
 

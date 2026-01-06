@@ -32,3 +32,12 @@ a.active hr{
         color: white;
     }
   }
+  .skeleton{
+    background: linear-gradient(90deg, rgba(240,240,240,1) 25%, rgba(225,225,225,1) 37%, rgba(240,240,240,1) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes shimmer{
+    0%{background-position: 100% 0}
+    100%{background-position: -100% 0}
+  }

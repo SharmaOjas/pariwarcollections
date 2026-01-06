@@ -3,6 +3,7 @@ import { ShopContext } from '../context/ShopContext'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PropTypes from 'prop-types'
+import ProgressiveImage from './ProgressiveImage'
 
 const ProductItem = ({ id, image, name, price, large = false }) => {
   const { currency, addToCart, products } = useContext(ShopContext)
@@ -38,11 +39,12 @@ const ProductItem = ({ id, image, name, price, large = false }) => {
 
       {/* Image */}
       <Link to={`/product/${id}`} onClick={() => scrollTo(0, 0)}>
-        <div className={`relative overflow-hidden ${large ? 'aspect-[4/5] sm:aspect-[3/4]' : ''}`}>
-          <img
+        <div className={`relative overflow-hidden ${large ? 'aspect-[4/5] sm:aspect-[3/4]' : 'aspect-square'}`}>
+          <ProgressiveImage
             src={image[0]}
             alt={name}
-            className={`w-full ${large ? 'h-full' : ''} object-cover transition duration-500 hover:scale-110`}
+            className="w-full h-full"
+            imgClassName={`${large ? 'h-full' : ''} transition-transform duration-500 hover:scale-110`}
           />
           <div className="absolute inset-0 bg-black/10" />
         </div>
