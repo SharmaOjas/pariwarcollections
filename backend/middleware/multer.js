@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
 const allowedMimes = ['image/jpeg','image/png','image/webp']
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (allowedMimes.includes(file.mimetype)) {
             cb(null, true)

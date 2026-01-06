@@ -5,7 +5,7 @@ import userModel from "../models/userModel.js";
 
 
 const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '2h' })
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
 }
 
 // Route for user login
@@ -87,7 +87,7 @@ const adminLogin = async (req, res) => {
         const {email,password} = req.body
 
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign({ role: 'admin' },process.env.JWT_SECRET, { expiresIn: '2h' });
+            const token = jwt.sign({ role: 'admin' },process.env.JWT_SECRET, { expiresIn: '7d' });
             res.json({success:true,token})
         } else {
             res.json({success:false,message:"Invalid credentials"})
