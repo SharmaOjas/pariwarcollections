@@ -5,6 +5,29 @@ import nodemailer from "nodemailer"
 import userModel from "../models/userModel.js";
 import emailOtpModel from "../models/emailOtpModel.js";
 
+// --- NEW: HTML Template Helper ---
+const getOtpEmailTemplate = (otp) => {
+    return `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; max-width: 600px; font-size: 16px; line-height: 1.5;">
+        <p style="margin-bottom: 24px;">Dear Customer,</p>
+        
+        <p>Your OTP to verify your email is <strong style="font-size: 24px; color: #000; letter-spacing: 2px;">${otp}</strong>.</p>
+        
+        <p>Valid for 10 minutes. Please do not share this code.</p>
+        
+        <br />
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+        
+        <p style="font-style: italic; color: #555;">
+          Made to be worn, loved, and passed on.
+        </p>
+        
+        <p style="font-weight: bold; margin-top: 10px; color: #000;">
+          — Pariwar Collection
+        </p>
+      </div>
+    `;
+};
 
 const createToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
@@ -40,11 +63,11 @@ const sendOtp = async (req, res) => {
         const tr = smtpTransport();
         if (tr) {
             await tr.sendMail({
-                from: `${process.env.BRAND_NAME || 'Priwar Collection'} <${process.env.SMTP_FROM || email}>`,
+                from: `${process.env.BRAND_NAME || 'Pariwar Collection'} <${process.env.SMTP_FROM || email}>`,
                 to: email,
-                subject: "Your verification code",
-                text: `Your OTP is ${code}. It expires in 10 minutes.`,
-                html: `<p>Your OTP is <b>${code}</b>.</p><p>It expires in 10 minutes.</p>`
+                subject: "Verify your email - Pariwar Collection", // Updated subject line
+                text: `Dear Customer, Your OTP is ${code}. Valid for 10 minutes. Made to be worn, loved, and passed on. — Pariwar Collection`, // Updated text fallback
+                html: getOtpEmailTemplate(code) // <--- Updated to use the new template
             })
         }
         res.json({ success: true, message: "OTP sent" })
