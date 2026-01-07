@@ -49,7 +49,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <p className="py-6 text-sm text-center text-[#EDC483]">
-          © 2024 Pariwar Collection Jewellery — All Rights Reserved
+          © 2026 Pariwar Collection Jewellery — All Rights Reserved
         </p>
 
       </div>

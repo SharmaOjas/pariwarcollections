@@ -31,8 +31,7 @@ const BestSeller = () => {
       >
         <Title text1={'BEST'} text2={'SELLERS'}/>
         <p className='w-3/4 m-auto text-xs sm:text-sm md:text-base text-gray-600'>
-        Crafted to perfection and loved by many. These are the signature pieces that define the Pariwar Collections experience.
-        </p>
+        Our most loved designs, trusted by families and chosen for their elegance, quality, and traditional charm.        </p>
       </motion.div>
 
       <motion.div 

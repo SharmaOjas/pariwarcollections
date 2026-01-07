@@ -142,7 +142,7 @@ const Orders = () => {
                 <div className='text-sm text-gray-800'>
                   <p>{receiptOrder.address.firstName} {receiptOrder.address.lastName}</p>
                   <p>{receiptOrder.address.street}</p>
-                  <p>{receiptOrder.address.city}, {receiptOrder.address.state} {receiptOrder.address.zipcode}</p>
+                  <p>{receiptOrder.address.city}, {receiptOrder.address.state} {receiptOrder.address.Pincode}</p>
                   <p>{receiptOrder.address.country}</p>
                   <p>Phone: {receiptOrder.address.phone}</p>
                 </div>

@@ -30,7 +30,7 @@ const LatestCollection = () => {
       >
           <Title text1={'LATEST'} text2={'COLLECTIONS'} />
           <p className='w-3/4 m-auto text-xs sm:text-sm md:text-base text-gray-600'>
-          A fresh take on timeless elegance. Explore our newest arrivals designed to make every moment sparkle.
+          A fresh expression of timeless tradition. Explore our newest designs, thoughtfully curated to add grace to every occasion.
           </p>
       </motion.div>
 

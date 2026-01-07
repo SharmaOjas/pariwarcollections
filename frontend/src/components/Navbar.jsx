@@ -71,7 +71,7 @@ const Navbar = () => {
                   navigate('/collection')
                 }}
                 src={assets.search_icon}
-                className="w-10 cursor-pointer"
+                className="w-8 cursor-pointer"
                 alt=""
               />
 
@@ -79,7 +79,7 @@ const Navbar = () => {
               <div className="group relative">
                 <img
                   onClick={() => (token ? null : navigate('/login'))}
-                  className="w-10 cursor-pointer"
+                  className="w-8 cursor-pointer"
                   src={assets.profile_icon}
                   alt=""
                 />
@@ -107,7 +107,7 @@ const Navbar = () => {
 
               {/* Cart */}
               <Link to="/cart" className="relative">
-                <img src={assets.cart_icon} className="w-10 min-w-5" alt="" />
+                <img src={assets.cart_icon} className="w-8 min-w-5" alt="" />
                 <p className="absolute right-[-5px] bottom-[-5px] w-5 text-center leading-5 bg-[#EDC483] text-[#231911] aspect-square rounded-full text-[18px] font-bold">
                   {getCartCount()}
                 </p>
@@ -117,7 +117,7 @@ const Navbar = () => {
               <img
                 onClick={() => setVisible(true)}
                 src={assets.menu_icon}
-                className="w-5 cursor-pointer sm:hidden"
+                className="w-8 cursor-pointer sm:hidden"
                 alt=""
               />
             </div>

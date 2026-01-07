@@ -34,7 +34,7 @@ const PlaceOrder = () => {
         street: '',
         city: '',
         state: '',
-        zipcode: '',
+        Pincode: '',
         country: '',
         phone: ''
     })
@@ -101,7 +101,7 @@ const PlaceOrder = () => {
         }
 
         // Validate form data
-        const requiredFields = ['firstName', 'lastName', 'email', 'street', 'city', 'state', 'zipcode', 'country', 'phone']
+        const requiredFields = ['firstName', 'lastName', 'email', 'street', 'city', 'state', 'Pincode', 'country', 'phone']
         const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '')
 
         if (missingFields.length > 0) {
@@ -224,7 +224,7 @@ const PlaceOrder = () => {
                 </div>
                 
                 <div className='flex gap-3'>
-                    <input onChange={onChangeHandler} name='zipcode' value={formData.zipcode} className={inputStyle} type="number" placeholder='Zipcode' />
+                    <input onChange={onChangeHandler} name='Pincode' value={formData.Pincode} className={inputStyle} type="number" placeholder='Pincode' />
                     <input onChange={onChangeHandler} name='country' value={formData.country} className={inputStyle} type="text" placeholder='Country' />
                 </div>
                 
