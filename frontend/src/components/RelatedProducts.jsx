@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import Title from './Title';
 import ProductItem from './ProductItem';
+import PropTypes from 'prop-types'
 
 const RelatedProducts = ({category}) => {
 
@@ -19,7 +20,7 @@ const RelatedProducts = ({category}) => {
             setRelated(productsCopy.slice(0,5));
         }
         
-    },[products])
+    },[products, category])
 
   return (
     <div className='my-24'>
@@ -37,3 +38,6 @@ const RelatedProducts = ({category}) => {
 }
 
 export default RelatedProducts
+RelatedProducts.propTypes = {
+  category: PropTypes.string.isRequired
+}
