@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { ShopContext } from '../context/ShopContextBase'
 import Title from '../components/Title'
 import { assets } from '../assets/assets'
 import CartTotal from '../components/CartTotal'
@@ -84,6 +84,10 @@ const Cart = () => {
                       alt={product.name}
                       className="w-full h-full rounded-2xl"
                       imgClassName="object-cover shadow-sm"
+                      sizes="(max-width: 640px) 90vw, 160px"
+                      fetchPriority="low"
+                      width={160}
+                      height={192}
                     />
                 </div>
 

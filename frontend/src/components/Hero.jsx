@@ -1,7 +1,8 @@
 import { useContext } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { ShopContext } from '../context/ShopContextBase'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import ProgressiveImage from './ProgressiveImage'
 
 const Hero = () => {
   const { products } = useContext(ShopContext)
@@ -86,10 +87,14 @@ const Hero = () => {
         transition={{ duration: 0.8, delay: 0.3 }}
         viewport={{ once: true }}
       >
-        <img
+        <ProgressiveImage
           src={heroImg}
-          alt=""
-          className="h-full w-full object-cover"
+          alt="Featured"
+          className="h-full w-full"
+          imgClassName="object-cover"
+          eager={true}
+          sizes="(max-width: 640px) 100vw, 55vw"
+          fetchPriority="high"
         />
       </motion.div>
 

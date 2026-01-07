@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { useContext, useEffect, useState, useCallback } from 'react'
+import { ShopContext } from '../context/ShopContextBase'
 import { assets } from '../assets/assets';
 import Title from '../components/Title';
 import ProductItem from '../components/ProductItem';
@@ -24,7 +24,7 @@ const Collection = () => {
 
   }
 
-  const applyFilter = () => {
+  const applyFilter = useCallback(() => {
 
     let productsCopy = products.slice();
 
@@ -38,9 +38,9 @@ const Collection = () => {
 
     setFilterProducts(productsCopy)
 
-  }
+  }, [products, showSearch, search, category])
 
-  const sortProduct = () => {
+  const sortProduct = useCallback(() => {
 
     let fpCopy = filterProducts.slice();
 
@@ -58,15 +58,15 @@ const Collection = () => {
         break;
     }
 
-  }
+  }, [filterProducts, sortType, applyFilter])
 
   useEffect(()=>{
       applyFilter();
-  },[category,search,showSearch,products])
+  },[applyFilter])
 
   useEffect(()=>{
     sortProduct();
-  },[sortType])
+  },[sortProduct])
 
   return (
     <motion.div 

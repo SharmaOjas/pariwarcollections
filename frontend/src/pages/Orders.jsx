@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { useContext, useEffect, useState, useCallback } from 'react'
+import { ShopContext } from '../context/ShopContextBase'
 import Title from '../components/Title';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -22,7 +22,7 @@ const Orders = () => {
     }
   }, [token, navigate])
 
-  const loadOrderData = async () => {
+  const loadOrderData = useCallback(async () => {
     try {
       if (!token) {
         return null
@@ -55,11 +55,11 @@ const Orders = () => {
         toast.error(error.response.data.message)
       }
     }
-  }
+  }, [backendUrl, token])
 
   useEffect(()=>{
     loadOrderData()
-  },[token])
+  },[loadOrderData])
 
   return (
     <div className='border-t pt-16'>

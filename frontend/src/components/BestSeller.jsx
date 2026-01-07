@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { useContext, useEffect, useState } from 'react'
+import { ShopContext } from '../context/ShopContextBase'
 import Title from './Title';
 import ProductItem from './ProductItem';
 import { motion } from 'framer-motion'

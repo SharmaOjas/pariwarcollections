@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import PropTypes from 'prop-types'
 
 const ProgressiveImage = ({
   src,
@@ -8,7 +9,11 @@ const ProgressiveImage = ({
   imgClassName = '',
   onLoad,
   onError,
-  eager = false
+  eager = false,
+  sizes,
+  fetchPriority,
+  width,
+  height
 }) => {
   const containerRef = useRef(null)
   const [visible, setVisible] = useState(false)
@@ -31,7 +36,7 @@ const ProgressiveImage = ({
           }
         })
       },
-      { rootMargin: '200px' }
+      { rootMargin: '600px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -75,6 +80,10 @@ const ProgressiveImage = ({
           alt={alt}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
+          sizes={sizes}
+          fetchPriority={fetchPriority}
+          width={width}
+          height={height}
           onLoad={handleLoad}
           onError={handleError}
           className={`w-full h-full object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'} ${imgClassName}`}
@@ -88,6 +97,21 @@ const ProgressiveImage = ({
       )}
     </div>
   )
+}
+
+ProgressiveImage.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  placeholderSrc: PropTypes.string,
+  className: PropTypes.string,
+  imgClassName: PropTypes.string,
+  onLoad: PropTypes.func,
+  onError: PropTypes.func,
+  eager: PropTypes.bool,
+  sizes: PropTypes.string,
+  fetchPriority: PropTypes.string,
+  width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 }
 
 export default ProgressiveImage

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ShopContext } from '../context/ShopContext'
+import { ShopContext } from '../context/ShopContextBase'
 import RelatedProducts from '../components/RelatedProducts'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -165,6 +165,8 @@ const Product = () => {
                       alt="Thumbnail"
                       className="w-full h-full rounded-sm"
                       imgClassName="object-cover"
+                      sizes="(max-width: 1024px) 20vw, 12vw"
+                      fetchPriority="low"
                     />
                   </button>
                 </div>
@@ -187,6 +189,8 @@ const Product = () => {
                 className="w-full h-auto max-h-[700px]"
                 imgClassName="object-cover hover:scale-[1.02] transition-transform duration-500"
                 eager={true}
+                sizes="(max-width: 1024px) 100vw, 60vw"
+                fetchPriority="high"
               />
 
               <button

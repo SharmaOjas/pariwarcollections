@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { ShopContext } from '../context/ShopContextBase'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PropTypes from 'prop-types'
@@ -45,6 +45,8 @@ const ProductItem = ({ id, image, name, price, large = false }) => {
             alt={name}
             className="w-full h-full"
             imgClassName={`${large ? 'h-full' : ''} transition-transform duration-500 hover:scale-110`}
+            sizes={large ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"}
+            fetchPriority="auto"
           />
           <div className="absolute inset-0 bg-black/10" />
         </div>

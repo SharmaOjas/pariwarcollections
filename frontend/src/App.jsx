@@ -1,4 +1,3 @@
-import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Collection from './pages/Collection'
@@ -12,18 +11,20 @@ import Orders from './pages/Orders'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import SearchBar from './components/SearchBar'
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
 import Delivery from './pages/Delivery'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import OrderPlaced from './pages/OrderPlaced'
 import PaymentFailed from './pages/PaymentFailed'
+import LoadingBar from './components/LoadingBar'
 
 const App = () => {
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]' style={{ background: '#ffd0abbd', paddingLeft: '0%', paddingRight: '0%' }}>
       <ToastContainer />
+      <LoadingBar />
       <Navbar />
       <SearchBar />
       <Routes>

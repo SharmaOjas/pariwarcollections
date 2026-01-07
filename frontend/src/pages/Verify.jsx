@@ -1,5 +1,5 @@
-import { useContext } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import { useContext, useCallback } from 'react'
+import { ShopContext } from '../context/ShopContextBase'
 import { useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import {toast} from 'react-toastify'
@@ -13,7 +13,7 @@ const Verify = () => {
     const success = searchParams.get('success')
     const orderId = searchParams.get('orderId')
 
-    const verifyPayment = async () => {
+    const verifyPayment = useCallback(async () => {
         try {
 
             if (!token) {
@@ -35,11 +35,11 @@ const Verify = () => {
         } catch (error) {
             toast.error(error.response?.data?.message || 'Payment verification failed. Please contact support.')
         }
-    }
+    }, [backendUrl, success, orderId, token, navigate, setCartItems])
 
     useEffect(() => {
         verifyPayment()
-    }, [token, success, orderId])
+    }, [verifyPayment])
 
     return (
         <div>

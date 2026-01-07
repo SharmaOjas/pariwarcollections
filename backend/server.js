@@ -80,6 +80,11 @@ app.get('/', (req, res) => {
 })
 
 // ===================== START SERVER ==================
-app.listen(port, () => {
-  console.log(`Server started on PORT : ${port}`)
-})
+const isVercel = !!process.env.VERCEL
+if (!isVercel) {
+  app.listen(port, () => {
+    console.log(`Server started on PORT : ${port}`)
+  })
+}
+
+export default app
