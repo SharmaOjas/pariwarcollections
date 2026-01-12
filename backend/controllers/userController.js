@@ -195,4 +195,55 @@ const adminLogin = async (req, res) => {
 }
 
 
-export { loginUser, registerUser, adminLogin, sendOtp, verifyOtp }
+
+// Route for password reset
+const resetPassword = async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+
+        if (!email || !code || !newPassword) {
+            return res.json({ success: false, message: "Missing details" });
+        }
+
+        const rec = await emailOtpModel.findOne({ email });
+        if (!rec) return res.json({ success: false, message: "OTP not found. Please request a new one." })
+            
+        if (rec.expiresAt < Date.now()) {
+            await emailOtpModel.deleteOne({ email })
+            return res.json({ success: false, message: "OTP expired. Please request a new one." })
+        }
+
+        if (rec.code !== code) {
+            return res.json({ success: false, message: "Invalid OTP" })
+        }
+
+        // Validate new password strength
+        if (newPassword.length < 8) {
+            return res.json({ success: false, message: "Please enter a strong password" })
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(newPassword, salt)
+
+        // Update user password
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        user.password = hashedPassword;
+        await user.save();
+
+        // Clear OTP
+        await emailOtpModel.deleteOne({ email });
+
+        res.json({ success: true, message: "Password reset successfully" });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message })
+    }
+}
+
+export { loginUser, registerUser, adminLogin, sendOtp, verifyOtp, resetPassword }

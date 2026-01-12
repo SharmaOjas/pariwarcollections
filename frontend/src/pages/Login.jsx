@@ -3,7 +3,7 @@ import { ShopContext } from '../context/ShopContextBase';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 // Optional icons for better UI
-import { Eye, EyeOff, Mail, Lock, User, CheckCircle, Loader2 } from 'lucide-react'; 
+import { Eye, EyeOff, Mail, Lock, User, CheckCircle, Loader2, ArrowLeft } from 'lucide-react'; 
 
 const Login = () => {
   const [currentState, setCurrentState] = useState('Login');
@@ -14,6 +14,9 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   
+  // Forgot Password State
+  const [newPassword, setNewPassword] = useState('');
+
   // UX State
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,7 +46,7 @@ const Login = () => {
         } else {
           toast.error(response.data.message);
         }
-      } else {
+      } else if (currentState === 'Login') {
         // Login Logic
         const response = await axios.post(backendUrl + '/api/user/login', { email, password });
         if (response.data.success) {
@@ -53,6 +56,25 @@ const Login = () => {
         } else {
           toast.error(response.data.message);
         }
+      } else if (currentState === 'Forgot Password') {
+          // Reset Password Logic
+          if (!otpSent) {
+             // Send OTP logic is handled by button, this might be triggered if user hits enter
+             await sendOtp();
+          } else {
+             // Reset Password
+             const response = await axios.post(backendUrl + '/api/user/reset-password', { email, code: otpCode, newPassword });
+             if (response.data.success) {
+                 toast.success(response.data.message);
+                 setCurrentState('Login');
+                 setOtpSent(false);
+                 setOtpCode('');
+                 setNewPassword('');
+                 setPassword('');
+             } else {
+                 toast.error(response.data.message);
+             }
+          }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'An error occurred. Please try again.');
@@ -71,7 +93,8 @@ const Login = () => {
       const r = await axios.post(backendUrl + '/api/user/send-otp', { email });
       if (r.data.success) {
         setOtpSent(true);
-        setEmailVerified(false);
+        // If in Sign Up, we reset verified state. If Forgot Password, just tracking sent.
+        if (currentState === 'Sign Up') setEmailVerified(false);
         toast.success('OTP code sent to your email.');
       } else {
         toast.error(r.data.message || 'Unable to send OTP');
@@ -117,6 +140,8 @@ const Login = () => {
     setOtpSent(false);
     setEmailVerified(false);
     setOtpCode('');
+    setNewPassword(''); // Clear new password
+    setPassword('');
   };
 
   return (
@@ -160,9 +185,9 @@ const Login = () => {
               className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none transition-all ${emailVerified ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}
               placeholder="Email Address" 
               required 
-              disabled={emailVerified} // Lock email after verification
+              disabled={emailVerified || (currentState === 'Forgot Password' && otpSent)} // Lock email after verification or during OTP flow
             />
-            {emailVerified && (
+            {emailVerified && currentState === 'Sign Up' && (
                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                  <CheckCircle className="h-5 w-5 text-green-600" />
                </div>
@@ -208,44 +233,97 @@ const Login = () => {
             </div>
           )}
 
-          {/* Password Input */}
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-gray-800 transition-colors" />
+          {/* Password Input (Login & Sign Up) */}
+          {(currentState === 'Login' || currentState === 'Sign Up') && (
+            <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-gray-800 transition-colors" />
+                </div>
+                <input 
+                onChange={(e) => setPassword(e.target.value)} 
+                value={password} 
+                type={showPassword ? "text" : "password"} 
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none transition-all" 
+                placeholder="Password" 
+                required 
+                />
+                <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
             </div>
-            <input 
-              onChange={(e) => setPassword(e.target.value)} 
-              value={password} 
-              type={showPassword ? "text" : "password"} 
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none transition-all" 
-              placeholder="Password" 
-              required 
-            />
-            <button 
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
-          </div>
+          )}
 
-          {/* Forgot Password / Switch Link */}
+           {/* Forgot Password Flow UI */}
+           {currentState === 'Forgot Password' && (
+              <>
+                 {!otpSent ? (
+                     <p className='text-sm text-gray-500 text-center'>Enter your email to receive a password reset OTP.</p>
+                 ) : (
+                     <>
+                        <div className="relative group">
+                            <input 
+                                value={otpCode} 
+                                onChange={(e) => setOtpCode(e.target.value)} 
+                                type="text" 
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 outline-none transition-all" 
+                                placeholder="Enter 6-digit OTP"
+                                required
+                            />
+                        </div>
+                        <div className="relative group">
+                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-gray-800 transition-colors" />
+                             </div>
+                             <input 
+                                onChange={(e) => setNewPassword(e.target.value)} 
+                                value={newPassword} 
+                                type={showPassword ? "text" : "password"} 
+                                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none transition-all" 
+                                placeholder="New Password" 
+                                required 
+                             />
+                             <button 
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                             >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                             </button>
+                        </div>
+                     </>
+                 )}
+              </>
+           )}
+
+          {/* Links */}
           <div className="flex justify-between text-sm mt-1">
-            <p className="text-gray-500 cursor-pointer hover:text-gray-800 transition-colors">Forgot password?</p>
-            {currentState === 'Login' 
-              ? <p onClick={() => switchState('Sign Up')} className="text-gray-800 font-medium cursor-pointer hover:underline">Create account</p>
-              : <p onClick={() => switchState('Login')} className="text-gray-800 font-medium cursor-pointer hover:underline">Login Here</p>
-            }
+             {currentState === 'Login' && (
+                <p onClick={() => switchState('Forgot Password')} className="text-gray-500 cursor-pointer hover:text-gray-800 transition-colors">Forgot password?</p>
+             )}
+             {currentState === 'Forgot Password' && (
+                <p onClick={() => switchState('Login')} className="text-gray-500 cursor-pointer hover:text-gray-800 transition-colors flex items-center gap-1"><ArrowLeft className='h-3 w-3'/> Back to Login</p>
+             )}
+
+             {currentState !== 'Forgot Password' && (
+                 currentState === 'Login' 
+                 ? <p onClick={() => switchState('Sign Up')} className="text-gray-800 font-medium cursor-pointer hover:underline">Create account</p>
+                 : <p onClick={() => switchState('Login')} className="text-gray-800 font-medium cursor-pointer hover:underline">Login Here</p>
+             )}
           </div>
 
           {/* Submit Button */}
           <button 
+            type={currentState === 'Forgot Password' && !otpSent ? 'button' : 'submit'}
+            onClick={currentState === 'Forgot Password' && !otpSent ? sendOtp : undefined}
             disabled={loading}
             className="w-full bg-gray-900 text-white font-light py-3 rounded-lg mt-2 hover:bg-gray-800 transition-transform active:scale-[0.98] disabled:bg-gray-600 disabled:cursor-not-allowed flex justify-center items-center gap-2"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {currentState === 'Login' ? 'Sign In' : 'Sign Up'}
+            {currentState === 'Login' ? 'Sign In' : currentState === 'Sign Up' ? 'Sign Up' : (!otpSent ? 'Send OTP' : 'Reset Password')}
           </button>
         </form>
       </div>

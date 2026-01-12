@@ -30,6 +30,7 @@ const Footer = () => {
               <Link to="/about"><li className="hover:text-white transition">About us</li></Link>
               <Link to="/delivery"><li className="hover:text-white transition">Delivery & Exchange Policy</li></Link>
               <Link to="/privacy-policy"><li className="hover:text-white transition">Privacy policy</li></Link>
+              <Link to="/terms-and-conditions"><li className="hover:text-white transition">Terms & Conditions</li></Link>
             </ul>
           </div>
 

@@ -19,6 +19,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import OrderPlaced from './pages/OrderPlaced'
 import PaymentFailed from './pages/PaymentFailed'
 import LoadingBar from './components/LoadingBar'
+import TermsAndConditions from './pages/TermsAndConditions'
 
 const App = () => {
   return (
@@ -40,6 +41,7 @@ const App = () => {
         <Route path='/verify' element={<Verify />} />
         <Route path='/delivery' element={<Delivery />} />
         <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+        <Route path='/terms-and-conditions' element={<TermsAndConditions />} />
         <Route path='/order-placed' element={<OrderPlaced />} />
         <Route path='/payment-failed' element={<PaymentFailed />} />
       </Routes>
