@@ -10,6 +10,15 @@ const PlaceOrder = () => {
 
     const [method, setMethod] = useState('cod');
     const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products, getCartCount } = useContext(ShopContext);
+    
+    // Import country and state data
+    // Assuming places.js is in assets folder as created
+    // We can also inline it if import is tricky, but let's try dynamic import or assume it's there.
+    // Since I cannot import inside the component easily without changing file structure significantly or relying on relative paths being perfect.
+    // I will use the relative path I created: ../assets/places
+    
+    // State for Countries and States
+    const [availableStates, setAvailableStates] = useState([]);
 
     // Check authentication and cart
     useEffect(() => {
@@ -25,6 +34,7 @@ const PlaceOrder = () => {
             return
         }
     }, [token, navigate, getCartCount])
+    
     const [couponCode, setCouponCode] = useState('');
     const [couponApplied, setCouponApplied] = useState(false);
     const [formData, setFormData] = useState({
@@ -38,6 +48,30 @@ const PlaceOrder = () => {
         country: '',
         phone: ''
     })
+
+    // Update available states when country changes
+    useEffect(() => {
+        if (formData.country) {
+             // We need to import the data. Since this is a simple replacement, I'll fetch it from the file I just created.
+             // Ideally this should be an import at top level, but to match the 'replace_file_content' scope I'll add the data here or assume import.
+             // Actually, I should add the import line at the top. But replace_file_content replaces a block.
+             // I will replace the WHOLE component function to be safe, but I need to make sure the import is added.
+             // Wait, I can't add imports with this tool if I only target the component.
+             // I will assume I can update the states logic here.
+             
+             // Dynamic logic for states:
+             import('../assets/places').then(module => {
+                 const { states } = module;
+                 if (states[formData.country]) {
+                     setAvailableStates(states[formData.country]);
+                 } else {
+                     setAvailableStates([]);
+                 }
+             }).catch(err => console.error("Could not load places", err));
+        } else {
+            setAvailableStates([]);
+        }
+    }, [formData.country]);
 
     const onChangeHandler = (event) => {
         const name = event.target.name
@@ -197,8 +231,12 @@ const PlaceOrder = () => {
     }
 
     // Design helper classes
-    const inputStyle = 'border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-white';
+    const inputStyle = 'border border-gray-300 rounded-lg py-2.5 px-4 w-full focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-white text-gray-700 placeholder-gray-400';
+    const labelStyle = 'block text-sm font-medium text-gray-700 mb-1';
     const paymentOptionStyle = (paymentMethod) => `flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors ${method === paymentMethod ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200'}`;
+    
+    // Simple countries list for immediate render before file load or if file load fails
+    const defaultCountries = ['India', 'United States', 'United Kingdom', 'Canada', 'Australia'];
 
     return (
         <form onSubmit={onSubmitHandler} className='flex flex-col lg:flex-row justify-between gap-8 pt-5 sm:pt-14 min-h-[80vh] border-t max-w-7xl mx-auto px-4 sm:px-6'>
@@ -210,25 +248,71 @@ const PlaceOrder = () => {
                     <Title text1={'DELIVERY'} text2={'INFORMATION'} />
                 </div>
                 
-                <div className='flex gap-3'>
-                    <input onChange={onChangeHandler} name='firstName' value={formData.firstName} className={inputStyle} type="text" placeholder='First name' />
-                    <input onChange={onChangeHandler} name='lastName' value={formData.lastName} className={inputStyle} type="text" placeholder='Last name' />
+                {/* Name Row */}
+                <div className='flex gap-4'>
+                    <div className='w-full'>
+                        {/* <label className={labelStyle}>First Name</label> */}
+                        <input onChange={onChangeHandler} name='firstName' value={formData.firstName} className={inputStyle} type="text" placeholder='First name' autoComplete="given-name" required />
+                    </div>
+                    <div className='w-full'>
+                        {/* <label className={labelStyle}>Last Name</label> */}
+                        <input onChange={onChangeHandler} name='lastName' value={formData.lastName} className={inputStyle} type="text" placeholder='Last name' autoComplete="family-name" required />
+                    </div>
                 </div>
                 
-                <input onChange={onChangeHandler} name='email' value={formData.email} className={inputStyle} type="email" placeholder='Email address' />
-                <input onChange={onChangeHandler} name='street' value={formData.street} className={inputStyle} type="text" placeholder='Street Address' />
+                <input onChange={onChangeHandler} name='email' value={formData.email} className={inputStyle} type="email" placeholder='Email address' autoComplete="email" required />
+                <input onChange={onChangeHandler} name='street' value={formData.street} className={inputStyle} type="text" placeholder='Street Address' autoComplete="street-address" required />
                 
-                <div className='flex gap-3'>
-                    <input onChange={onChangeHandler} name='city' value={formData.city} className={inputStyle} type="text" placeholder='City' />
-                    <input onChange={onChangeHandler} name='state' value={formData.state} className={inputStyle} type="text" placeholder='State' />
+                {/* Country & State Row */}
+                <div className='flex gap-4'>
+                    <div className='w-full'>
+                         <select 
+                            onChange={onChangeHandler} 
+                            name='country' 
+                            value={formData.country} 
+                            className={`${inputStyle} appearance-none bg-[url('https://upload.wikimedia.org/wikipedia/commons/9/9d/Arrow_down.svg')] bg-no-repeat bg-[length:12px] bg-[right_1rem_center] cursor-pointer`}
+                            autoComplete="country-name"
+                            required
+                        >
+                            <option value="" disabled>Select Country</option>
+                            {defaultCountries.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                     <div className='w-full'>
+                        {availableStates.length > 0 ? (
+                            <select 
+                                onChange={onChangeHandler} 
+                                name='state' 
+                                value={formData.state} 
+                                className={`${inputStyle} appearance-none bg-[url('https://upload.wikimedia.org/wikipedia/commons/9/9d/Arrow_down.svg')] bg-no-repeat bg-[length:12px] bg-[right_1rem_center] cursor-pointer`}
+                                autoComplete="address-level1"
+                                required
+                            >
+                                <option value="" disabled>Select State</option>
+                                {availableStates.map(s => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        ) : (
+                            <input onChange={onChangeHandler} name='state' value={formData.state} className={inputStyle} type="text" placeholder='State' autoComplete="address-level1" required />
+                        )}
+                    </div>
+                </div>
+
+                {/* City & Pincode Row */}
+                <div className='flex gap-4'>
+                    <div className='w-full'>
+                        <input onChange={onChangeHandler} name='city' value={formData.city} className={inputStyle} type="text" placeholder='City' autoComplete="address-level2" required />
+                    </div>
+                    <div className='w-full'>
+                        <input onChange={onChangeHandler} name='Pincode' value={formData.Pincode} className={inputStyle} type="number" placeholder='Pincode' autoComplete="postal-code" required />
+                    </div>
                 </div>
                 
-                <div className='flex gap-3'>
-                    <input onChange={onChangeHandler} name='Pincode' value={formData.Pincode} className={inputStyle} type="number" placeholder='Pincode' />
-                    <input onChange={onChangeHandler} name='country' value={formData.country} className={inputStyle} type="text" placeholder='Country' />
-                </div>
-                
-                <input onChange={onChangeHandler} name='phone' value={formData.phone} className={inputStyle} type="number" placeholder='Phone Number' />
+                <input onChange={onChangeHandler} name='phone' value={formData.phone} className={inputStyle} type="tel" placeholder='Phone Number' autoComplete="tel" required />
             </div>
 
             {/* ------------- Right Side (Order Summary & Payment) ------------------ */}
