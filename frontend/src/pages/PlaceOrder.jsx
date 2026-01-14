@@ -46,7 +46,9 @@ const PlaceOrder = () => {
         state: '',
         Pincode: '',
         country: '',
-        phone: ''
+        phone: '',
+        flat: '',
+        landmark: ''
     })
 
     // Update available states when country changes
@@ -135,7 +137,7 @@ const PlaceOrder = () => {
         }
 
         // Validate form data
-        const requiredFields = ['firstName', 'lastName', 'email', 'street', 'city', 'state', 'Pincode', 'country', 'phone']
+        const requiredFields = ['firstName', 'lastName', 'email', 'street', 'city', 'state', 'Pincode', 'country', 'phone', 'flat']
         const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '')
 
         if (missingFields.length > 0) {
@@ -248,23 +250,20 @@ const PlaceOrder = () => {
                     <Title text1={'DELIVERY'} text2={'INFORMATION'} />
                 </div>
                 
-                {/* Name Row */}
-                <div className='flex gap-4'>
-                    <div className='w-full'>
-                        {/* <label className={labelStyle}>First Name</label> */}
-                        <input onChange={onChangeHandler} name='firstName' value={formData.firstName} className={inputStyle} type="text" placeholder='First name' autoComplete="given-name" required />
-                    </div>
-                    <div className='w-full'>
-                        {/* <label className={labelStyle}>Last Name</label> */}
-                        <input onChange={onChangeHandler} name='lastName' value={formData.lastName} className={inputStyle} type="text" placeholder='Last name' autoComplete="family-name" required />
-                    </div>
+                <div className='flex gap-3'>
+                    <input onChange={onChangeHandler} name='firstName' value={formData.firstName} className={inputStyle} type="text" placeholder='First name' autoComplete="given-name" required />
+                    <input onChange={onChangeHandler} name='lastName' value={formData.lastName} className={inputStyle} type="text" placeholder='Last name' autoComplete="family-name" required />
                 </div>
                 
                 <input onChange={onChangeHandler} name='email' value={formData.email} className={inputStyle} type="email" placeholder='Email address' autoComplete="email" required />
-                <input onChange={onChangeHandler} name='street' value={formData.street} className={inputStyle} type="text" placeholder='Street Address' autoComplete="street-address" required />
                 
-                {/* Country & State Row */}
-                <div className='flex gap-4'>
+                <input onChange={onChangeHandler} name='flat' value={formData.flat} className={inputStyle} type="text" placeholder='Flat, House no., Building, Company, Apartment' autoComplete="address-line1" required />
+                
+                <input onChange={onChangeHandler} name='street' value={formData.street} className={inputStyle} type="text" placeholder='Area, Street, Sector, Village' autoComplete="address-line2" required />
+                
+                <input onChange={onChangeHandler} name='landmark' value={formData.landmark} className={inputStyle} type="text" placeholder='Landmark' autoComplete="address-line3" />
+                
+                <div className='flex gap-3'>
                     <div className='w-full'>
                          <select 
                             onChange={onChangeHandler} 
@@ -302,17 +301,12 @@ const PlaceOrder = () => {
                     </div>
                 </div>
 
-                {/* City & Pincode Row */}
-                <div className='flex gap-4'>
-                    <div className='w-full'>
-                        <input onChange={onChangeHandler} name='city' value={formData.city} className={inputStyle} type="text" placeholder='City' autoComplete="address-level2" required />
-                    </div>
-                    <div className='w-full'>
-                        <input onChange={onChangeHandler} name='Pincode' value={formData.Pincode} className={inputStyle} type="number" placeholder='Pincode' autoComplete="postal-code" required />
-                    </div>
+                <div className='flex gap-3'>
+                    <input onChange={onChangeHandler} name='city' value={formData.city} className={inputStyle} type="text" placeholder='City' autoComplete="address-level2" required />
+                    <input onChange={onChangeHandler} name='Pincode' value={formData.Pincode} className={inputStyle} type="number" placeholder='Pincode' autoComplete="postal-code" required />
                 </div>
                 
-                <input onChange={onChangeHandler} name='phone' value={formData.phone} className={inputStyle} type="tel" placeholder='Phone Number' autoComplete="tel" required />
+                <input onChange={onChangeHandler} name='phone' value={formData.phone} className={inputStyle} type="number" placeholder='Phone Number' autoComplete="tel" required />
             </div>
 
             {/* ------------- Right Side (Order Summary & Payment) ------------------ */}
