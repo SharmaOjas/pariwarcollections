@@ -8,7 +8,7 @@ import PropTypes from 'prop-types'
 const ShopContextProvider = (props) => {
 
     const currency = '₹';
-    const delivery_fee = 100;
+    const delivery_fee = 10;
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);

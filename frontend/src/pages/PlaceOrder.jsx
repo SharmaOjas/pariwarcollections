@@ -234,7 +234,6 @@ const PlaceOrder = () => {
 
     // Design helper classes
     const inputStyle = 'border border-gray-300 rounded-lg py-2.5 px-4 w-full focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-white text-gray-700 placeholder-gray-400';
-    const labelStyle = 'block text-sm font-medium text-gray-700 mb-1';
     const paymentOptionStyle = (paymentMethod) => `flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors ${method === paymentMethod ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200'}`;
     
     // Simple countries list for immediate render before file load or if file load fails
