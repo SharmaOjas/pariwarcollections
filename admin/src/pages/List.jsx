@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { backendUrl, currency } from '../App'
 import { toast } from 'react-toastify'
 
@@ -118,7 +119,10 @@ const List = () => {
                   }
                 }} className='border px-3 py-1 bg-pink-100'>Set as Hero</button>
               </div>
-              <p onClick={()=>removeProduct(item._id)} className='text-right md:text-center cursor-pointer text-lg'>X</p>
+              <div className='flex flex-col md:flex-row gap-2 justify-center items-center text-lg'>
+                  <Link to={`/edit/${item._id}`} className='cursor-pointer text-blue-500'>Edit</Link>
+                  <p onClick={()=>removeProduct(item._id)} className='cursor-pointer'>X</p>
+              </div>
             </div>
           ))
         }

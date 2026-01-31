@@ -36,7 +36,7 @@ const addProduct = async (req, res) => {
             price: Number(price),
             bestseller: bestseller === "true" ? true : false,
             allowCustomSize: allowCustomSize === "true" ? true : false,
-            sizes: JSON.parse(sizes),
+            sizes: sizes ? JSON.parse(sizes) : [],
             inventoryQuantity: qty,
             inventoryStatus: status,
             inventoryAudit: [{
@@ -66,15 +66,76 @@ const addProduct = async (req, res) => {
     }
 }
 
+// function for updating product
+const updateProduct = async (req, res) => {
+    try {
+        const { id, name, description, price, category, sizes, bestseller, allowCustomSize } = req.body
+
+        const product = await productModel.findById(id)
+        if (!product) {
+            return res.json({ success: false, message: 'Product not found' })
+        }
+
+        // Handle image updates
+        const image1 = req.files.image1 && req.files.image1[0]
+        const image2 = req.files.image2 && req.files.image2[0]
+        const image3 = req.files.image3 && req.files.image3[0]
+        const image4 = req.files.image4 && req.files.image4[0]
+
+        let updatedImages = [...product.image]
+
+        if (image1) {
+            let result = await cloudinary.uploader.upload(image1.path, { resource_type: 'image' })
+            updatedImages[0] = result.secure_url
+        }
+        if (image2) {
+            let result = await cloudinary.uploader.upload(image2.path, { resource_type: 'image' })
+            updatedImages[1] = result.secure_url
+        }
+        if (image3) {
+            let result = await cloudinary.uploader.upload(image3.path, { resource_type: 'image' })
+            updatedImages[2] = result.secure_url
+        }
+        if (image4) {
+            let result = await cloudinary.uploader.upload(image4.path, { resource_type: 'image' })
+            updatedImages[3] = result.secure_url
+        }
+
+        // Clean up undefined/null slots if original array was smaller, though usually we just replace specific indices
+        // Ideally we want to keep the array clean. 
+        // If the original product had 2 images, and we upload image3, updatedImages[2] will be set.
+
+        // Remove null/undefined from array if any gap is created (less likely here as we strictly map 1-4)
+        updatedImages = updatedImages.filter(img => img !== undefined && img !== null);
+
+        await productModel.findByIdAndUpdate(id, {
+            name,
+            description,
+            price: Number(price),
+            category,
+            sizes: sizes ? JSON.parse(sizes) : [],
+            bestseller: bestseller === "true" ? true : false,
+            allowCustomSize: allowCustomSize === "true" ? true : false,
+            image: updatedImages
+        })
+
+        res.json({ success: true, message: "Product Updated" })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
 // function for list product
 const listProducts = async (req, res) => {
     try {
-        
+
         if (process.env.NODE_ENV === 'development') {
             console.log('List products requested')
         }
         const products = await productModel.find({}).lean();
-        res.json({success:true,products})
+        res.json({ success: true, products })
 
     } catch (error) {
         console.log(error)
@@ -132,9 +193,9 @@ const updateInventory = async (req, res) => {
 // function for removing product
 const removeProduct = async (req, res) => {
     try {
-        
+
         await productModel.findByIdAndDelete(req.body.id)
-        res.json({success:true,message:"Product Removed"})
+        res.json({ success: true, message: "Product Removed" })
 
     } catch (error) {
         console.log(error)
@@ -145,11 +206,11 @@ const removeProduct = async (req, res) => {
 // function for single product info
 const singleProduct = async (req, res) => {
     try {
-        
+
         const { productId } = req.body
         console.log('Single product requested', productId)
         const product = await productModel.findById(productId).lean()
-        res.json({success:true,product})
+        res.json({ success: true, product })
 
     } catch (error) {
         console.log(error)
@@ -193,4 +254,4 @@ const setHeroProduct = async (req, res) => {
     }
 }
 
-export { listProducts, addProduct, removeProduct, singleProduct, updateInventory, stockCheck, setHeroProduct }
+export { listProducts, addProduct, removeProduct, singleProduct, updateInventory, stockCheck, setHeroProduct, updateProduct }
