@@ -32,9 +32,10 @@ const Product = () => {
 
   /* ---------------- ZOOM LOGIC ---------------- */
   const [zoomEnabled, setZoomEnabled] = useState(false)
-  const [zoomScale, setZoomScale] = useState(1.3)
+  const [zoomScale, setZoomScale] = useState(1.8)
   const [lensVisible, setLensVisible] = useState(false)
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 })
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 })
   const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 })
   const [imgLoaded, setImgLoaded] = useState(false)
 
@@ -45,12 +46,25 @@ const Product = () => {
     setImgLoaded(true)
   }
 
-  const onEnter = () => zoomEnabled && imgLoaded && setLensVisible(true)
+  const onEnter = (e) => {
+    if (zoomEnabled && imgLoaded) {
+        setLensVisible(true)
+        const rect = e.currentTarget.getBoundingClientRect()
+        setContainerSize({ w: rect.width, h: rect.height })
+    }
+  } 
+  
   const onLeave = () => setLensVisible(false)
 
   const onMove = (e) => {
-    if (!lensVisible || !imgLoaded) return
+    if (!zoomEnabled || !imgLoaded) return
+    if (!lensVisible) setLensVisible(true)
+    
     const rect = e.currentTarget.getBoundingClientRect()
+    if (rect.width !== containerSize.w || rect.height !== containerSize.h) {
+        setContainerSize({ w: rect.width, h: rect.height })
+    }
+
     setLensPos({
       x: clamp(e.clientX - rect.left, 0, rect.width),
       y: clamp(e.clientY - rect.top, 0, rect.height)
@@ -62,10 +76,26 @@ const Product = () => {
   const onWheel = (e) => {
     if (!zoomEnabled) return
     const delta = e.deltaY < 0 ? 0.1 : -0.1
-    setZoomScale(s => clamp(Number((s + delta).toFixed(2)), 1, 2.5))
+    setZoomScale(s => clamp(Number((s + delta).toFixed(2)), 1.2, 3))
   }
-
- 
+  
+  // Calculate Background Position
+  const lensWidth = 180
+  const lensRadius = lensWidth / 2
+  
+  let bgPos = { x: 0, y: 0 }
+  if (containerSize.w > 0 && containerSize.h > 0) {
+      const ratioX = lensPos.x / containerSize.w
+      const ratioY = lensPos.y / containerSize.h
+      
+      const bgWidth = imgNatural.w * zoomScale
+      const bgHeight = imgNatural.h * zoomScale
+      
+      bgPos = {
+          x: lensRadius - (ratioX * bgWidth),
+          y: lensRadius - (ratioY * bgHeight)
+      }
+  }
 
   /* ---------------- DATA LOAD ---------------- */
   useEffect(() => {
@@ -175,12 +205,11 @@ const Product = () => {
 
             {/* Main Image & Zoom */}
             <div
-              className="lg:w-[85%] relative bg-white flex items-center justify-center rounded-sm overflow-hidden"
+              className="lg:w-[85%] relative bg-white flex items-center justify-center rounded-sm overflow-hidden touch-none"
               onMouseEnter={onEnter}
               onMouseLeave={onLeave}
               onMouseMove={onMove}
               onWheel={onWheel}
-              style={{ touchAction: 'none' }}
             >
               <ProgressiveImage
                 src={image}
@@ -194,7 +223,10 @@ const Product = () => {
               />
 
               <button
-                onClick={toggleZoom}
+                onClick={(e) => {
+                    e.stopPropagation() // Prevent triggering container events
+                    toggleZoom()
+                }}
                 className={`absolute top-4 right-4 text-[10px] font-bold tracking-widest px-4 py-2 rounded-full transition-all duration-300 backdrop-blur-md z-10 uppercase ${
                   zoomEnabled 
                     ? 'bg-black text-white' 
@@ -208,14 +240,14 @@ const Product = () => {
                 <div
                   className="absolute border-2 border-white/50 rounded-full pointer-events-none shadow-2xl z-20 bg-white"
                   style={{
-                    width: 180,
-                    height: 180,
-                    left: lensPos.x - 90,
-                    top: lensPos.y - 90,
+                    width: lensWidth,
+                    height: lensWidth,
+                    left: lensPos.x - lensRadius,
+                    top: lensPos.y - lensRadius,
                     backgroundImage: `url(${image})`,
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: `${imgNatural.w * zoomScale}px ${imgNatural.h * zoomScale}px`,
-                    backgroundPosition: `${-(lensPos.x * zoomScale - 90)}px ${-(lensPos.y * zoomScale - 90)}px`
+                    backgroundPosition: `${bgPos.x}px ${bgPos.y}px`
                   }}
                 />
               )}
@@ -232,16 +264,6 @@ const Product = () => {
 
             {/* Ratings & Status Row */}
             <div className="flex items-center justify-between mb-6">
-                {/* <div className="flex items-center gap-1">
-                    <div className="flex text-yellow-500">
-                        {[1,2,3,4].map(i => (
-                            <img key={i} src={assets.star_icon} className="w-3.5 h-3.5" alt="star" />
-                        ))}
-                        <img src={assets.star_dull_icon} className="w-3.5 h-3.5" alt="star empty" />
-                    </div>
-                    <span className="text-xs text-gray-500 ml-2 border-b border-gray-300 pb-0.5">(122 Reviews)</span>
-                </div> */}
-                
                 <div className={`text-xs font-medium px-2 py-1 rounded ${
                     computedStatus === 'In Stock' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>

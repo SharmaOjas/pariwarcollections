@@ -44,13 +44,13 @@ const BestSeller = () => {
       >
         {bestSeller.length === 0
           ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-                <div className="aspect-square relative">
-                  <div className="absolute inset-0 skeleton" />
+              <div key={i} className="flex flex-col gap-3">
+                <div className="aspect-[4/5] relative overflow-hidden rounded-lg bg-gray-100">
+                  <div className="absolute inset-0 skeleton h-full w-full" />
                 </div>
-                <div className="p-4">
-                  <div className="h-4 w-3/4 skeleton rounded mb-2" />
-                  <div className="h-5 w-1/2 skeleton rounded" />
+                <div className="text-center space-y-2">
+                  <div className="h-4 w-3/4 skeleton rounded mx-auto" />
+                  <div className="h-4 w-1/2 skeleton rounded mx-auto" />
                 </div>
               </div>
             ))

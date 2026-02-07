@@ -34,63 +34,50 @@ const ProductItem = ({ id, image, name, price, large = false }) => {
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ duration: 0.25 }}
-      className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition ${large ? 'md:rounded-3xl' : ''}`}
+      className={`group cursor-pointer ${large ? 'md:rounded-3xl' : ''}`}
     >
 
       {/* Image */}
-      <Link to={`/product/${id}`} onClick={() => scrollTo(0, 0)}>
-        <div className={`relative overflow-hidden ${large ? 'aspect-[4/5] sm:aspect-[3/4]' : 'aspect-square'}`}>
+      <Link to={`/product/${id}`} onClick={() => scrollTo(0, 0)} className="block overflow-hidden relative">
           <ProgressiveImage
             src={image[0]}
             alt={name}
-            className="w-full h-full"
-            imgClassName={`${large ? 'h-full' : ''} transition-transform duration-500 hover:scale-110`}
-            sizes={large ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"}
+            className="w-full h-auto object-cover aspect-[4/5] transition-transform duration-700 group-hover:scale-105"
+            imgClassName="w-full h-full object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             fetchPriority="auto"
           />
-          <div className="absolute inset-0 bg-black/10" />
-        </div>
+          {/* Add to Cart Overlay Button */}
+           <motion.button
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddToCart();
+            }}
+            disabled={!isInStock}
+            whileTap={{ scale: 0.96 }}
+            className={`absolute bottom-4 right-4 p-3 rounded-full shadow-md transition-opacity duration-300 opacity-0 group-hover:opacity-100 ${
+              isInStock
+                ? 'bg-white text-black hover:bg-gray-100'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+             aria-label="Add to cart"
+          >
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </motion.button>
       </Link>
 
       {/* Content */}
-      <div className={`p-4 ${large ? 'md:p-5' : ''}`}>
-        <p className="text-base sm:text-lg font-semibold text-gray-800 leading-snug line-clamp-2">
+      <div className="pt-3 text-center">
+        <p className="text-sm font-prata text-gray-900 leading-tight">
           {name}
         </p>
-        <p className="text-lg sm:text-xl font-bold text-[#53131f] mt-1">
+        <p className="text-sm font-medium text-gray-600 mt-1 font-outfit">
           {currency}{price}
         </p>
 
-        {/* Buttons — ALWAYS visible */}
-        <div className="mt-4 flex gap-2">
 
-          {/* View */}
-          <Link
-  to={`/product/${id}`}
-  onClick={() => scrollTo(0, 0)}
-  className={`w-1/2 h-12 flex items-center justify-center text-center font-medium rounded-lg border border-[#53131f] text-[#53131f] hover:bg-[#53131f] hover:text-white transition ${
-    large ? 'text-sm' : 'text-xs'
-  }`}
->
-  View
-</Link>
-
-
-          {/* Add / Out */}
-          <motion.button
-            onClick={handleAddToCart}
-            disabled={!isInStock}
-            whileTap={{ scale: 0.96 }}
-            className={`w-1/2 py-3 text-sm sm:text-base font-semibold rounded-xl transition ${
-              isInStock
-                ? 'bg-[#53131f] text-white hover:bg-[#3a0f1a]'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {isInStock ? 'Add to Cart' : 'Out of Stock'}
-          </motion.button>
-
-        </div>
       </div>
 
       {/* Size Modal */}
